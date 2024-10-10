@@ -1,10 +1,8 @@
-// src/api/harvardApi.js
 import axios from 'axios';
 
 const API_BASE_URL = 'https://api.harvardartmuseums.org';
-const API_KEY = process.env.REACT_APP_HARVARD_API_KEY; // Store your API key in an environment variable
+const API_KEY = process.env.REACT_APP_HARVARD_API_KEY; 
 
-// Function to search for artworks
 export const searchArtworks = async (query, limit = 10) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/object`, {
