@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ExhibitionCreator from '../components/ExhibitionCreator';
 
 const Exhibition = () => {
