@@ -48,12 +48,23 @@ const Search = () => {
     }
   };
 
+  const addToExhibition = (artwork) => {
+    const savedArtworks = JSON.parse(sessionStorage.getItem('selectedArtworks') || '[]');
+    if (!savedArtworks.some(saved => saved.id === artwork.id)) {
+      const updatedArtworks = [...savedArtworks, artwork];
+      sessionStorage.setItem('selectedArtworks', JSON.stringify(updatedArtworks));
+      alert('Artwork added to your exhibition!');
+    } else {
+      alert('This artwork is already in your exhibition.');
+    }
+  };
+
   return (
     <div className="search-page">
       <h2>Search Artworks</h2>
       <SearchForm onSearch={handleSearch} isLoading={isLoading} />
       {error && <p className="error">{error}</p>}
-      <ArtworkList artworks={results} />
+      <ArtworkList artworks={results} onAddToExhibition={addToExhibition} />
     </div>
   );
 };
