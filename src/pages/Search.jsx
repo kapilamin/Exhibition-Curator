@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { ExhibitionContext } from '../contexts/ExhibitionContext';
 import SearchForm from '../components/SearchForm';
 import ArtworkList from '../components/ArtworkList';
 import { searchArtworks as searchMetArtworks, getMultipleArtworkDetails } from '../api/metropolitanApi';
@@ -11,6 +12,8 @@ const Search = () => {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('title');
+
+  const { addToExhibition } = useContext(ExhibitionContext);
 
   const handleSearch = async (query) => {
     setIsLoading(true);
@@ -50,11 +53,12 @@ const Search = () => {
     }
   };
 
-  const addToExhibition = (artwork) => {
+  const handleAddToExhibition = (artwork) => {
     const savedArtworks = JSON.parse(sessionStorage.getItem('selectedArtworks') || '[]');
     if (!savedArtworks.some(saved => saved.id === artwork.id)) {
       const updatedArtworks = [...savedArtworks, artwork];
       sessionStorage.setItem('selectedArtworks', JSON.stringify(updatedArtworks));
+      addToExhibition(artwork); // This updates the context
       alert('Artwork added to your exhibition!');
     } else {
       alert('This artwork is already in your exhibition.');
@@ -98,7 +102,7 @@ const Search = () => {
           <option value="artist">Sort by Artist</option>
         </select>
       </div>
-      <ArtworkList artworks={filteredResults} onAddToExhibition={addToExhibition} />
+      <ArtworkList artworks={filteredResults} onAddToExhibition={handleAddToExhibition} />
     </div>
   );
 };

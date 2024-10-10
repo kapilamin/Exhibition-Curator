@@ -1,33 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import ExhibitionCreator from '../components/ExhibitionCreator';
+import React, { useContext } from 'react';
+import { ExhibitionContext } from '../contexts/ExhibitionContext';
+import ArtworkCard from '../components/ArtworkCard';
 
 const Exhibition = () => {
-  const [selectedArtworks, setSelectedArtworks] = useState([]);
-
-  useEffect(() => {
-    // Load saved artworks from session storage when component mounts
-    const savedArtworks = sessionStorage.getItem('selectedArtworks');
-    if (savedArtworks) {
-      setSelectedArtworks(JSON.parse(savedArtworks));
-    }
-  }, []);
-
-  useEffect(() => {
-    // Save artworks to session storage whenever it changes
-    sessionStorage.setItem('selectedArtworks', JSON.stringify(selectedArtworks));
-  }, [selectedArtworks]);
-
-  const removeArtwork = (id) => {
-    setSelectedArtworks(selectedArtworks.filter(artwork => artwork.id !== id));
-  };
+  const { exhibition, removeFromExhibition } = useContext(ExhibitionContext);
 
   return (
     <div className="exhibition">
       <h2>Your Curated Exhibition</h2>
-      <ExhibitionCreator
-        selectedArtworks={selectedArtworks}
-        removeArtwork={removeArtwork}
-      />
+      {exhibition.length === 0 ? (
+        <p>Your exhibition is empty. Add some artworks from the search page!</p>
+      ) : (
+        exhibition.map(artwork => (
+          <ArtworkCard
+            key={artwork.id}
+            artwork={artwork}
+            onRemove={() => removeFromExhibition(artwork.id)}
+          />
+        ))
+      )}
     </div>
   );
 };
