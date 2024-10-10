@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ExhibitionCreator = ({ selectedArtworks, removeArtwork }) => {
+const ExhibitionCreator = ({ selectedArtworks, removeArtwork, addArtwork }) => {
   return (
     <div className="exhibition-creator">
       <h2>My Exhibition</h2>
@@ -11,6 +11,7 @@ const ExhibitionCreator = ({ selectedArtworks, removeArtwork }) => {
           <button onClick={() => removeArtwork(artwork.id)}>Remove</button>
         </div>
       ))}
+      <button onClick={addArtwork}>Add Artwork</button>
     </div>
   );
 };
