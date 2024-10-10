@@ -8,9 +8,11 @@ import { searchArtworks as searchHarvardArtworks } from '../api/harvardApi';
 const Search = () => {
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSearch = async (query) => {
     setIsLoading(true);
+    setError(null);
     try {
       // Search Metropolitan Museum
       const metObjectIds = await searchMetArtworks(query);
@@ -31,7 +33,7 @@ const Search = () => {
         ...harvardArtworks.map(artwork => ({
           id: artwork.id,
           title: artwork.title,
-          artist: artwork.people ? artwork.people[0].name : 'Unknown',
+          artist: artwork.people ? artwork.people.map(p => p.name).join(', ') : 'Unknown',
           image: artwork.primaryimageurl,
           source: 'Harvard Art Museums'
         }))
@@ -40,17 +42,17 @@ const Search = () => {
       setResults(combinedResults);
     } catch (error) {
       console.error('Search failed:', error);
+      setError('An error occurred while searching. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  
-    console.log('Search component rendering');
-};
+  };
 
   return (
     <div className="search-page">
       <h2>Search Artworks</h2>
       <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+      {error && <p className="error">{error}</p>}
       <ArtworkList artworks={results} />
     </div>
   );
