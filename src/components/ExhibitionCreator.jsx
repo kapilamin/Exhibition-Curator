@@ -1,17 +1,19 @@
 import React from 'react';
+import ArtworkCard from './ArtworkCard';
 
-const ExhibitionCreator = ({ selectedArtworks, removeArtwork, addArtwork }) => {
+const ExhibitionCreator = ({ selectedArtworks, removeArtwork }) => {
   return (
     <div className="exhibition-creator">
-      <h2>My Exhibition</h2>
-      {selectedArtworks.map((artwork) => (
-        <div key={artwork.id}>
-          <img src={artwork.thumbnailUrl} alt={artwork.title} />
-          <p>{artwork.title}</p>
-          <button onClick={() => removeArtwork(artwork.id)}>Remove</button>
-        </div>
-      ))}
-      <button onClick={addArtwork}>Add Artwork</button>
+      {selectedArtworks.length === 0 ? (
+        <p>Your exhibition is empty. Add some artworks from the search page!</p>
+      ) : (
+        selectedArtworks.map(artwork => (
+          <div key={artwork.id}>
+            <ArtworkCard artwork={artwork} />
+            <button onClick={() => removeArtwork(artwork.id)}>Remove from Exhibition</button>
+          </div>
+        ))
+      )}
     </div>
   );
 };
