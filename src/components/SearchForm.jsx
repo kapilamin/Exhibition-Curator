@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const SearchForm = ({ onSearch }) => {
+const SearchForm = ({ onSearch, isLoading }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleSubmit = (e) => {
@@ -15,8 +15,11 @@ const SearchForm = ({ onSearch }) => {
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder="Search artworks..."
+        disabled={isLoading}
       />
-      <button type="submit">Search</button>
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? 'Searching...' : 'Search'}
+      </button>
     </form>
   );
 };
