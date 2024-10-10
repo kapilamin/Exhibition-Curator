@@ -5,10 +5,13 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Search from './pages/Search';
 import Exhibition from './pages/Exhibition';
+import GlobalStyle from './styles/GlobalStyle';
+
 
 function App() {
   return (
     <Router>
+       <GlobalStyle />
       <div className="App">
         <Header />
         <main>
