@@ -20,7 +20,6 @@ export const searchArtworks = async (query, limit = 10) => {
   }
 };
 
-// Function to get details of a specific artwork
 export const getArtworkDetails = async (objectId) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/object/${objectId}`, {
@@ -36,7 +35,6 @@ export const getArtworkDetails = async (objectId) => {
   }
 };
 
-// Function to get a list of classifications (categories of artworks)
 export const getClassifications = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/classification`, {
@@ -54,7 +52,6 @@ export const getClassifications = async () => {
   }
 };
 
-// Function to get artworks by classification
 export const getArtworksByClassification = async (classification, limit = 10) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/object`, {

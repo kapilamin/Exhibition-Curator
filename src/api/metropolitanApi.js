@@ -1,9 +1,7 @@
-// src/api/metropolitanApi.js
 import axios from 'axios';
 
 const API_BASE_URL = 'https://collectionapi.metmuseum.org/public/collection/v1';
 
-// Function to search for artworks
 export const searchArtworks = async (query) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/search`, {
@@ -12,14 +10,13 @@ export const searchArtworks = async (query) => {
         hasImages: true
       }
     });
-    return response.data.objectIDs;
+    return response.data.objectIDs || [];
   } catch (error) {
     console.error('Error searching Metropolitan Museum of Art:', error);
     throw error;
   }
 };
 
-// Function to get details of a specific artwork
 export const getArtworkDetails = async (objectId) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/objects/${objectId}`);
@@ -30,10 +27,13 @@ export const getArtworkDetails = async (objectId) => {
   }
 };
 
-// Function to get multiple artwork details
 export const getMultipleArtworkDetails = async (objectIds, limit = 10) => {
+  if (!objectIds || !objectIds.length) return [];
+  
   try {
-    const artworksPromises = objectIds.slice(0, limit).map(id => getArtworkDetails(id));
+    const artworksPromises = objectIds
+      .slice(0, limit)
+      .map(id => getArtworkDetails(id));
     return await Promise.all(artworksPromises);
   } catch (error) {
     console.error('Error fetching multiple artwork details:', error);
@@ -41,7 +41,6 @@ export const getMultipleArtworkDetails = async (objectIds, limit = 10) => {
   }
 };
 
-// Function to get a list of departments
 export const getDepartments = async () => {
   try {
     const response = await axios.get(`${API_BASE_URL}/departments`);
@@ -52,7 +51,6 @@ export const getDepartments = async () => {
   }
 };
 
-// Function to get artworks by department
 export const getArtworksByDepartment = async (departmentId, limit = 10) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/objects`, {
@@ -61,8 +59,8 @@ export const getArtworksByDepartment = async (departmentId, limit = 10) => {
         hasImages: true
       }
     });
-    const objectIds = response.data.objectIDs.slice(0, limit);
-    return await getMultipleArtworkDetails(objectIds);
+    
+    return (response.data.objectIDs || []).slice(0, limit);
   } catch (error) {
     console.error('Error fetching artworks by department from Metropolitan Museum of Art:', error);
     throw error;

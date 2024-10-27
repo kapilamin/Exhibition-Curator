@@ -1,39 +1,32 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ExhibitionProvider } from './contexts/ExhibitionContext';
 import Home from './pages/Home';
 import Search from './pages/Search';
 import Exhibition from './pages/Exhibition';
+import ArtworkViewer from './components/ArtworkViewer';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 function App() {
   return (
     <ExhibitionProvider>
-        <Router>
-        <div className="App">
-            <header>
-            <h1>Exhibition Curator</h1>
-            <nav>
-                <ul>
-                <li><Link to="/">Home</Link></li>
-                <li><Link to="/search">Search</Link></li>
-                <li><Link to="/exhibition">My Exhibition</Link></li>
-                </ul>
-            </nav>
-            </header>
-
-            <main>
+      <Router>
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          
+          <main className="flex-grow">
             <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/exhibition" element={<Exhibition />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/exhibition" element={<Exhibition />} />
+              <Route path="/artwork/:source/:id" element={<ArtworkViewer />} />
             </Routes>
-            </main>
+          </main>
 
-            <footer>
-            <p>&copy; 2024 Exhibition Curator. All rights reserved.</p>
-            </footer>
+          <Footer />
         </div>
-        </Router>
+      </Router>
     </ExhibitionProvider>
   );
 }
