@@ -24,32 +24,27 @@ export const ExhibitionProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Search across both APIs
   const searchAllArtworks = useCallback(async (searchTerm) => {
     setLoading(true);
     setError(null);
     try {
-      // Search both APIs concurrently
       const [metResults, harvardResults] = await Promise.all([
         searchMetArtworks(searchTerm),
         searchHarvardArtworks(searchTerm, 10)
       ]);
 
-      // Get Met artwork details
       const metArtworksPromises = (metResults || [])
         .slice(0, 10)
         .map(id => getMetArtworkDetails(id));
       
       const metArtworks = await Promise.all(metArtworksPromises);
 
-      // Process Harvard results
       const harvardArtworksPromises = (harvardResults || [])
         .slice(0, 10)
         .map(result => getHarvardArtworkDetails(result.id));
 
       const harvardArtworks = await Promise.all(harvardArtworksPromises);
 
-      // Format and combine results
       const combinedResults = [
         ...metArtworks.map(artwork => ({
           id: artwork.objectID.toString(),
@@ -73,7 +68,7 @@ export const ExhibitionProvider = ({ children }) => {
           dimensions: artwork.dimensions,
           link: `https://harvardartmuseums.org/collections/object/${artwork.id}`
         }))
-      ].filter(artwork => artwork.image); // Only include artworks with images
+      ].filter(artwork => artwork.image); 
 
       setSearchResults(combinedResults);
     } catch (err) {
@@ -84,7 +79,6 @@ export const ExhibitionProvider = ({ children }) => {
     }
   }, []);
 
-  // Add artwork to exhibition
   const addToExhibition = useCallback((artwork) => {
     setExhibition(prev => {
       if (prev.some(item => item.id === artwork.id)) {
@@ -94,23 +88,19 @@ export const ExhibitionProvider = ({ children }) => {
     });
   }, []);
 
-  // Remove artwork from exhibition
   const removeFromExhibition = useCallback((artworkId) => {
     setExhibition(prev => prev.filter(item => item.id !== artworkId));
   }, []);
 
-  // Clear entire exhibition
   const clearExhibition = useCallback(() => {
     setExhibition([]);
   }, []);
 
-  // Get next artwork in exhibition
   const getNextArtwork = useCallback((currentId) => {
     const currentIndex = exhibition.findIndex(item => item.id === currentId);
     return exhibition[currentIndex + 1] || null;
   }, [exhibition]);
 
-  // Get previous artwork in exhibition
   const getPreviousArtwork = useCallback((currentId) => {
     const currentIndex = exhibition.findIndex(item => item.id === currentId);
     return exhibition[currentIndex - 1] || null;

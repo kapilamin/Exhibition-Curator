@@ -93,7 +93,6 @@ const ExhibitionCreator = () => {
   };
 
   const handleShare = () => {
-    // Implement sharing functionality
     const shareUrl = window.location.href;
     if (navigator.share) {
       navigator.share({
