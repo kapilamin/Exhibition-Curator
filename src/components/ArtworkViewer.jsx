@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useExhibition } from '../contexts/ExhibitionContext';
-import { 
-  getArtworkDetails as getMetArtworkDetails 
-} from '../api/metropolitanApi';
-import { 
-  getArtworkDetails as getHarvardArtworkDetails 
-} from '../api/harvardApi';
+import { getArtworkDetails as getMetArtworkDetails } from '../api/metropolitanApi';
+import { getArtworkDetails as getHarvardArtworkDetails } from '../api/harvardApi';
 import { ChevronLeft, ChevronRight, Plus, Minus, ExternalLink } from 'lucide-react';
 
 const getImageUrl = (url, source) => {
@@ -50,6 +46,13 @@ const ArtworkViewer = () => {
   }, [location.state, exhibition, source, id]);
 
   useEffect(() => {
+    if (!loading && artwork) {
+      const announcement = `Now viewing ${artwork.title} by ${artwork.artist || 'Unknown Artist'}`;
+      document.getElementById('artwork-announcement').textContent = announcement;
+    }
+  }, [artwork, loading]);
+
+  useEffect(() => {
     const fetchArtworkDetails = async () => {
       setLoading(true);
       setError(null);
@@ -63,7 +66,7 @@ const ArtworkViewer = () => {
           setArtwork({
             id: artworkData.objectID.toString(),
             title: artworkData.title,
-            artist: artworkData.artistDisplayName || 'Unknown',
+            artist: artworkData.artistDisplayName || 'Unknown Artist',
             image: artworkData.primaryImage,
             source: 'met',
             date: artworkData.objectDate,
@@ -85,7 +88,7 @@ const ArtworkViewer = () => {
           setArtwork({
             id: artworkData.id.toString(),
             title: artworkData.title,
-            artist: artworkData.people ? artworkData.people[0].name : 'Unknown',
+            artist: artworkData.people ? artworkData.people[0].name : 'Unknown Artist',
             image: getImageUrl(artworkData.primaryimageurl, 'harvard'),
             source: 'harvard',
             date: artworkData.dated,
@@ -151,7 +154,12 @@ const ArtworkViewer = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
+      <div 
+        className="flex items-center justify-center min-h-[50vh]"
+        role="alert"
+        aria-busy="true"
+      >
+        <div className="sr-only">Loading artwork details</div>
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
       </div>
     );
@@ -159,13 +167,17 @@ const ArtworkViewer = () => {
 
   if (error || !artwork) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div 
+        className="max-w-7xl mx-auto px-4 py-8"
+        role="alert"
+      >
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-8"
+          className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-8 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-lg p-2"
+          aria-label="Return to previous page"
         >
-          <ChevronLeft size={20} />
-          Go Back
+          <ChevronLeft size={20} aria-hidden="true" />
+          <span>Go Back</span>
         </button>
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <p className="text-gray-600 mb-4">
@@ -173,7 +185,7 @@ const ArtworkViewer = () => {
           </p>
           <button
             onClick={() => navigate('/search')}
-            className="text-purple-600 hover:text-purple-700 font-medium"
+            className="text-purple-600 hover:text-purple-700 font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-lg p-2"
           >
             Return to Search
           </button>
@@ -183,75 +195,217 @@ const ArtworkViewer = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8" tabIndex="-1">
-      <div className="flex justify-between items-center mb-8">
+    <main 
+      className="max-w-7xl mx-auto px-4 py-8"
+      id="main-content"
+      tabIndex="-1"
+    >
+      {/* Hidden live region for screen readers */}
+      <div 
+        id="artwork-announcement" 
+        className="sr-only" 
+        aria-live="polite" 
+        aria-atomic="true"
+      ></div>
+
+      <nav className="flex justify-between items-center mb-8">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-purple-600 hover:text-purple-700"
+          className="flex items-center gap-2 text-purple-600 hover:text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-lg p-2"
+          aria-label="Return to previous page"
         >
-          <ChevronLeft size={20} />
-          Back to {location.state?.from || 'Search'}
+          <ChevronLeft size={20} aria-hidden="true" />
+          <span>Back to {location.state?.from || 'Search'}</span>
         </button>
         
-        <div className="text-sm text-gray-500">
+        <div 
+          className="text-sm text-gray-500"
+          aria-live="polite"
+        >
           {artworkList.length > 0 && (
             <span>Artwork {currentIndex + 1} of {artworkList.length}</span>
           )}
         </div>
-      </div>
+      </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <article 
+        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+        aria-labelledby="artwork-title"
+      >
         <div className="relative">
-          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+          <figure className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
             {artwork.image ? (
               <img
                 src={artwork.image}
-                alt={artwork.title}
+                alt={`Artwork: ${artwork.title}`}
                 className="w-full h-full object-contain"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = '/placeholder-artwork.jpg';
+                  e.target.alt = 'Artwork image not available';
                 }}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-500">
+              <div 
+                className="w-full h-full flex items-center justify-center text-gray-500"
+                role="img" 
+                aria-label="No image available"
+              >
                 No image available
               </div>
             )}
-          </div>
+          </figure>
 
-          {/* Navigation Arrows */}
-          <div className="absolute top-1/2 -translate-y-1/2 w-full flex justify-between px-4">
+          {/* Navigation Controls */}
+          <div 
+            className="absolute top-1/2 -translate-y-1/2 w-full flex justify-between px-4"
+            role="navigation"
+            aria-label="Artwork navigation"
+          >
             <button
               onClick={handlePrevious}
               disabled={currentIndex === 0}
-              className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              aria-label="Previous artwork"
+              className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-500"
+              aria-label="View previous artwork"
             >
-              <ChevronLeft size={24} />
+              <ChevronLeft size={24} aria-hidden="true" />
             </button>
             <button
               onClick={handleNext}
               disabled={currentIndex === artworkList.length - 1}
-              className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              aria-label="Next artwork"
+              className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-500"
+              aria-label="View next artwork"
             >
-              <ChevronRight size={24} />
+              <ChevronRight size={24} aria-hidden="true" />
             </button>
           </div>
         </div>
 
-        {/* Rest of the detail content remains the same */}
         <div className="space-y-6">
-          {/* ... existing detail content ... */}
+          <header>
+            <h1 
+              id="artwork-title"
+              className="text-3xl font-bold text-gray-900 mb-2"
+            >
+              {artwork.title}
+            </h1>
+            <p className="text-xl text-gray-600">
+              By {artwork.artist}
+            </p>
+          </header>
+
+          <dl className="grid grid-cols-2 gap-4">
+            {artwork.date && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Date Created</dt>
+                <dd className="mt-1">{artwork.date}</dd>
+              </div>
+            )}
+            {artwork.medium && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Medium</dt>
+                <dd className="mt-1">{artwork.medium}</dd>
+              </div>
+            )}
+            {artwork.dimensions && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Dimensions</dt>
+                <dd className="mt-1">{artwork.dimensions}</dd>
+              </div>
+            )}
+            {artwork.department && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Department</dt>
+                <dd className="mt-1">{artwork.department}</dd>
+              </div>
+            )}
+            {artwork.culture && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Culture</dt>
+                <dd className="mt-1">{artwork.culture}</dd>
+              </div>
+            )}
+            {artwork.classification && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Classification</dt>
+                <dd className="mt-1">{artwork.classification}</dd>
+              </div>
+            )}
+            {artwork.accessionNumber && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Accession Number</dt>
+                <dd className="mt-1">{artwork.accessionNumber}</dd>
+              </div>
+            )}
+          </dl>
+
+          {artwork.description && (
+            <div>
+              <dt className="text-sm font-medium text-gray-500 mb-2">Description</dt>
+              <dd className="prose prose-sm max-w-none">{artwork.description}</dd>
+            </div>
+          )}
+
+          {artwork.creditLine && (
+            <div>
+              <dt className="text-sm font-medium text-gray-500 mb-2">Credit</dt>
+              <dd className="text-sm text-gray-600">{artwork.creditLine}</dd>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-4 pt-4">
+            <button
+              onClick={() => isInExhibition ? removeFromExhibition(artwork.id) : addToExhibition(artwork)}
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                isInExhibition 
+                  ? 'border-red-600 text-red-600 hover:bg-red-50 focus:ring-red-500' 
+                  : 'border-green-600 text-green-600 hover:bg-green-50 focus:ring-green-500'
+              }`}
+              aria-label={isInExhibition ? 'Remove from exhibition' : 'Add to exhibition'}
+            >
+              {isInExhibition ? (
+                <>
+                  <Minus size={20} aria-hidden="true" />
+                  <span>Remove from Exhibition</span>
+                </>
+              ) : (
+                <>
+                  <Plus size={20} aria-hidden="true" />
+                  <span>Add to Exhibition</span>
+                </>
+              )}
+            </button>
+
+            <a
+              href={artwork.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+              aria-label={`View ${artwork.title} on museum website (opens in new tab)`}
+            >
+              <ExternalLink size={20} aria-hidden="true" />
+              <span>View on Museum Site</span>
+            </a>
+          </div>
         </div>
+      </article>
+
+      <div className="mt-8 border-t border-gray-200 pt-8">
+        <p className="text-sm text-gray-500">
+          This artwork is located at {artwork.location}
+          {artwork.galleryNumber && ` in Gallery ${artwork.galleryNumber}`}.
+        </p>
       </div>
 
-      {/* Navigation hints */}
-      <div className="mt-8 text-center text-sm text-gray-500">
-        Use arrow keys ← → to navigate between artworks
+      {/* Keyboard Navigation Instructions */}
+      <div 
+        className="mt-4 text-center text-sm text-gray-500"
+        role="note"
+        aria-label="Keyboard navigation instructions"
+      >
+        Use left and right arrow keys to navigate between artworks
       </div>
-    </div>
+    </main>
   );
 };
 
