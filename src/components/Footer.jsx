@@ -40,28 +40,6 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Connect</h3>
-            <div className="flex space-x-4">
-              <a
-                href="https://github.com/yourusername/exhibition-curator"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <Github size={24} />
-              </a>
-              <a
-                href="https://twitter.com/yourusername"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <Twitter size={24} />
-              </a>
-            </div>
-          </div>
         </div>
 
         <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm text-gray-400">
