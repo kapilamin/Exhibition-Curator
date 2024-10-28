@@ -330,7 +330,7 @@ const Search = () => {
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Explore Artworks</h1>
-        <p className="text-xl text-gray-600">
+        <p className="text-xl text-white">
           Discover masterpieces from the world's leading museums
         </p>
       </div>
@@ -358,7 +358,7 @@ const Search = () => {
       {!isLoading && (
         <>
           <div className="mb-6 flex justify-between items-center">
-            <p className="text-gray-600">
+            <p className="text-white">
               {hasSearched ? (
                 `Found ${filteredResults.length} artwork${filteredResults.length !== 1 ? 's' : ''}
                  ${searchTerm ? ` for "${searchTerm}"` : ''}`
