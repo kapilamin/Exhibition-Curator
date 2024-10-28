@@ -330,7 +330,7 @@ const Search = () => {
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Explore Artworks</h1>
-        <p className="text-xl text-white">
+        <p className="text-xl text-gray-100">
           Discover masterpieces from the world's leading museums
         </p>
       </div>
@@ -358,7 +358,7 @@ const Search = () => {
       {!isLoading && (
         <>
           <div className="mb-6 flex justify-between items-center">
-            <p className="text-white">
+            <p className="text-gray-100">
               {hasSearched ? (
                 `Found ${filteredResults.length} artwork${filteredResults.length !== 1 ? 's' : ''}
                  ${searchTerm ? ` for "${searchTerm}"` : ''}`
@@ -368,7 +368,7 @@ const Search = () => {
             </p>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-gray-100 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
             >
               <Filter size={20} />
               {showFilters ? 'Hide Filters' : 'Show Filters'}
