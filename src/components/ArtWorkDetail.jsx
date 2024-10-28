@@ -61,19 +61,23 @@ const ArtworkDetail = () => {
           <div className="absolute top-1/2 transform -translate-y-1/2 w-full flex justify-between px-4">
             <button
               onClick={handlePrevious}
-              className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-100
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70
+                       disabled:opacity-50 disabled:cursor-not-allowed
+                       transition-colors duration-200"
               disabled={!getPreviousArtwork(id)}
+              aria-label="Previous artwork"
             >
-              <ChevronLeft size={24} />
+              <ChevronLeft size={24} className="text-white" />
             </button>
             <button
               onClick={handleNext}
-              className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-100
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70
+                       disabled:opacity-50 disabled:cursor-not-allowed
+                       transition-colors duration-200"
               disabled={!getNextArtwork(id)}
+              aria-label="Next artwork"
             >
-              <ChevronRight size={24} />
+              <ChevronRight size={24} className="text-white" />
             </button>
           </div>
         </div>

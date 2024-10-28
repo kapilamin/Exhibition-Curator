@@ -17,9 +17,12 @@ const Home = () => {
     <p className="text-xl text-gray-300 mb-6">
       Create your own virtual art exhibition from world-renowned museums. Discover, curate, and share your favorite artworks from the Metropolitan Museum of Art and Harvard Art Museums.
     </p>
-<button className="px-6 py-3 text-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-transform transform hover:scale-105 rounded-lg shadow-lg">
-  Start Curating
-</button>
+    <Link 
+            to="/search"
+            className="inline-block px-6 py-3 text-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-transform transform hover:scale-105 rounded-lg shadow-lg"
+          >
+            Start Curating
+          </Link>
 
   </div>
 </section>
@@ -38,7 +41,7 @@ const Home = () => {
               <div className="flex justify-center mb-4">
                 <Search className="h-12 w-12 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Discover</h3>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900">Discover</h3>
               <p className="text-gray-600">
                 Search through thousands of artworks from leading museums around the world
               </p>
@@ -48,7 +51,7 @@ const Home = () => {
               <div className="flex justify-center mb-4">
                 <PlusCircle className="h-12 w-12 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Curate</h3>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900">Curate</h3>
               <p className="text-gray-600">
                 Select your favorite pieces and organize them into your personal exhibition
               </p>
@@ -58,7 +61,7 @@ const Home = () => {
               <div className="flex justify-center mb-4">
                 <Share2 className="h-12 w-12 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Share</h3>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900">Share</h3>
               <p className="text-gray-600">
                 Share your curated exhibition with friends and art enthusiasts
               </p>
