@@ -57,9 +57,6 @@ const Header = () => {
             aria-label="Home"
             onClick={handleLinkClick}
           >
-            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center transform group-hover:rotate-6 transition-transform">
-              <span className="text-white font-bold text-xl">EC</span>
-            </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
               Exhibition Curator
             </h1>

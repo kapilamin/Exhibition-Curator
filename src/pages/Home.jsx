@@ -6,27 +6,24 @@ const Home = () => {
   return (
     <div className="min-h-screen">
      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-indigo-900 to-purple-900 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-              Welcome to Exhibition Curator
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
-              Create your own virtual art exhibition from world-renowned museums. Discover, curate, 
-              and share your favorite artworks from the Metropolitan Museum of Art and Harvard Art Museums.
-            </p>
-            <Link
-              to="/search"
-              className="inline-flex items-center px-8 py-3 border border-transparent text-lg font-medium rounded-md 
-                        text-purple-900 bg-white hover:bg-gray-50 transition-colors duration-200"
-            >
-              Start Curating
-              <PlusCircle className="ml-2 h-5 w-5" />
-            </Link>
-          </div>
-        </div>
-      </div>
+     <section
+  className="bg-cover bg-center h-screen flex items-center justify-center"
+  style={{ backgroundImage: "url('https://helloartsy.com/wp-content/uploads/kids/places/how-to-draw-a-museum/how-to-draw-a-museum-step-9.jpg')" }}
+>
+  <div className="text-center bg-black bg-opacity-60 p-8 rounded-lg max-w-lg">
+    <h1 className="text-5xl font-bold text-white mb-6">
+      Welcome to Exhibition Curator
+    </h1>
+    <p className="text-xl text-gray-300 mb-6">
+      Create your own virtual art exhibition from world-renowned museums. Discover, curate, and share your favorite artworks from the Metropolitan Museum of Art and Harvard Art Museums.
+    </p>
+<button className="px-6 py-3 text-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-transform transform hover:scale-105 rounded-lg shadow-lg">
+  Start Curating
+</button>
+
+  </div>
+</section>
+
 
       {/* Features Section */}
       <div className="py-20 bg-white">
