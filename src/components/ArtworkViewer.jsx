@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useExhibition } from '../contexts/ExhibitionContext';
-import { getArtworkDetails as getMetArtworkDetails } from '../api/metropolitanApi';
-import { getArtworkDetails as getHarvardArtworkDetails } from '../api/harvardApi';
+import { 
+  getArtworkDetails as getMetArtworkDetails 
+} from '../api/metropolitanApi';
+import { 
+  getArtworkDetails as getHarvardArtworkDetails 
+} from '../api/harvardApi';
 import { ChevronLeft, ChevronRight, Plus, Minus, ExternalLink } from 'lucide-react';
 
+// Helper function to get a proxied or direct image URL
 const getImageUrl = (url, source) => {
   if (!url) return null;
   
@@ -150,7 +155,7 @@ const ArtworkViewer = () => {
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
     };
-  }, [currentIndex, artworkList]); 
+  }, [currentIndex, artworkList]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -377,36 +382,36 @@ const ArtworkViewer = () => {
             </button>
 
             <a
-              href={artwork.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
-              aria-label={`View ${artwork.title} on museum website (opens in new tab)`}
-            >
-              <ExternalLink size={20} aria-hidden="true" />
-              <span>View on Museum Site</span>
-            </a>
-          </div>
+            href={artwork.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+            aria-label={`View ${artwork.title} on museum website (opens in new tab)`}
+          >
+            <ExternalLink size={20} aria-hidden="true" />
+            <span>View on Museum Site</span>
+          </a>
         </div>
-      </article>
-
-      <div className="mt-8 border-t border-gray-200 pt-8">
-        <p className="text-sm text-gray-500">
-          This artwork is located at {artwork.location}
-          {artwork.galleryNumber && ` in Gallery ${artwork.galleryNumber}`}.
-        </p>
       </div>
+    </article>
 
-      {/* Keyboard Navigation Instructions */}
-      <div 
-        className="mt-4 text-center text-sm text-gray-500"
-        role="note"
-        aria-label="Keyboard navigation instructions"
-      >
-        Use left and right arrow keys to navigate between artworks
-      </div>
-    </main>
-  );
+    <div className="mt-8 border-t border-gray-200 pt-8">
+      <p className="text-sm text-gray-500">
+        This artwork is located at {artwork.location}
+        {artwork.galleryNumber && ` in Gallery ${artwork.galleryNumber}`}.
+      </p>
+    </div>
+
+    {/* Keyboard Navigation Instructions */}
+    <div 
+      className="mt-4 text-center text-sm text-gray-500"
+      role="note"
+      aria-label="Keyboard navigation instructions"
+    >
+      Use left and right arrow keys to navigate between artworks
+    </div>
+  </main>
+);
 };
 
 export default ArtworkViewer;
