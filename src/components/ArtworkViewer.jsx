@@ -9,7 +9,6 @@ import {
 } from '../api/harvardApi';
 import { ChevronLeft, ChevronRight, Plus, Minus, ExternalLink } from 'lucide-react';
 
-// Helper function to get a proxied or direct image URL
 const getImageUrl = (url, source) => {
   if (!url) return null;
   

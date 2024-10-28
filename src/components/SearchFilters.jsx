@@ -13,7 +13,7 @@ const SearchFilters = ({ filters, setFilters }) => {
             id="source"
             value={filters.source}
             onChange={(e) => setFilters(prev => ({ ...prev, source: e.target.value }))}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
           >
             <option value="all">All Museums</option>
             <option value="met">Metropolitan Museum</option>
@@ -30,7 +30,7 @@ const SearchFilters = ({ filters, setFilters }) => {
             id="sortBy"
             value={filters.sortBy}
             onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
           >
             <option value="title">Title (A-Z)</option>
             <option value="artist">Artist Name</option>
@@ -48,7 +48,7 @@ const SearchFilters = ({ filters, setFilters }) => {
             id="period"
             value={filters.period}
             onChange={(e) => setFilters(prev => ({ ...prev, period: e.target.value }))}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
           >
             <option value="all">All Periods</option>
             <option value="ancient">Ancient (Before 500 CE)</option>
@@ -68,7 +68,7 @@ const SearchFilters = ({ filters, setFilters }) => {
             id="medium"
             value={filters.medium}
             onChange={(e) => setFilters(prev => ({ ...prev, medium: e.target.value }))}
-            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
           >
             <option value="all">All Mediums</option>
             <option value="painting">Paintings</option>

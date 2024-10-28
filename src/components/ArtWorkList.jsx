@@ -38,7 +38,7 @@ const ArtworkList = ({ artworks, onAddToExhibition }) => {
               <Link 
                 to={`/artwork/${artwork.source}/${artwork.id}`}
                 state={{ artworkList: artworks, currentIndex: index }}
-                className="hover:text-purple-600 transition-colors"
+                className="text-blue-600 hover:text-purple-600 transition-colors"
               >
                 {artwork.title}
               </Link>
@@ -77,29 +77,3 @@ const ArtworkList = ({ artworks, onAddToExhibition }) => {
 
 export default ArtworkList;
 
-// import React from 'react';
-// import ArtworkCard from './ArtworkCard';
-
-// const ArtworkList = ({ artworks, onAddToExhibition }) => {
-//   if (!artworks?.length) {
-//     return (
-//       <div className="text-center py-12 bg-blue-50 rounded-lg border-2 border-blue-100">
-//         <p className="text-gray-600">No artworks to display. Try adjusting your filters!</p>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-//       {artworks.map(artwork => (
-//         <ArtworkCard
-//           key={artwork.id}
-//           artwork={artwork}
-//           onAddToExhibition={onAddToExhibition}
-//         />
-//       ))}
-//     </div>
-//   );
-// };
-
-// export default ArtworkList;

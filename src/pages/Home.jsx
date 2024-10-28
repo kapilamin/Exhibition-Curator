@@ -8,7 +8,7 @@ const Home = () => {
      {/* Hero Section */}
      <section
   className="bg-cover bg-center h-screen flex items-center justify-center"
-  style={{ backgroundImage: "url('https://helloartsy.com/wp-content/uploads/kids/places/how-to-draw-a-museum/how-to-draw-a-museum-step-9.jpg')" }}
+  style={{ backgroundImage: "url('https://images.squarespace-cdn.com/content/v1/551bbbeee4b0cf5ef58798e6/1557115497985-NQH8AXJR9V13UWYH8C4D/HAG-7.jpg?format=2500w')" }}
 >
   <div className="text-center bg-black bg-opacity-60 p-8 rounded-lg max-w-lg">
     <h1 className="text-5xl font-bold text-white mb-6">
