@@ -27,7 +27,7 @@ const ArtworkCard = ({ artwork, onAddToExhibition, onRemove }) => {
       </div>
 
       <div className="p-4">
-        <h3 className="text-lg font-semibold line-clamp-2">
+        <h3 className="text-lg font-semibold line-clamp-2 text-blue-500">
           <Link 
             to={`/artwork/${artwork.source}/${artwork.id}`}
             className="hover:text-purple-600 transition-colors"
