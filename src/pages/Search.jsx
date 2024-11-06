@@ -81,10 +81,6 @@ const Search = () => {
   };
 
   useEffect(() => {
-    showToast('Test toast message', 'success');
-  }, [showToast]);
-
-  useEffect(() => {
     let isMounted = true;
 
     const fetchFeaturedArtworks = async () => {
@@ -256,7 +252,6 @@ const handleSearch = async (term) => {
   };
 
   const handleExhibitionAction = (artwork, action) => {
-    console.log('Exhibition action triggered:', artwork.title, action); 
     showToast(
       `${artwork.title} has been ${action} ${action === 'added' ? 'to' : 'from'} your exhibition`,
       action === 'added' ? 'success' : 'error'
@@ -409,10 +404,6 @@ const handleSearch = async (term) => {
                       onRemoveFromExhibition={removeFromExhibition}
                       isInExhibition={isInExhibition}
                       onExhibitionAction={handleExhibitionAction}                  
-                      // currentPage={1}
-                      // totalPages={1}
-                      // totalItems={categoryArtworks.length}
-                      // itemsPerPage={categoryArtworks.length}
                     />
                   </div>
                 ) : null;

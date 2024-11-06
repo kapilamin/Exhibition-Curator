@@ -1,3 +1,4 @@
+import { useToast } from '../contexts/ToastContext';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useExhibition } from '../contexts/ExhibitionContext';
@@ -29,6 +30,8 @@ const ArtworkViewer = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { exhibition, addToExhibition, removeFromExhibition } = useExhibition();
+  const { showToast } = useToast();
+
   
   const [artwork, setArtwork] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -147,6 +150,14 @@ const ArtworkViewer = () => {
     } else if (event.key === 'ArrowRight') {
       handleNext();
     }
+  };
+
+  const handleExhibitionAction = (action) => {
+    console.log('Exhibition action triggered:', artwork.title, action);
+    showToast(
+      `${artwork.title} has been ${action} ${action === 'added' ? 'to' : 'from'} your exhibition`,
+      action === 'added' ? 'success' : 'error'
+    );
   };
 
   useEffect(() => {
@@ -359,7 +370,21 @@ const ArtworkViewer = () => {
 
           <div className="flex flex-wrap gap-4 pt-4">
             <button
-              onClick={() => isInExhibition ? removeFromExhibition(artwork.id) : addToExhibition(artwork)}
+              onClick={() => {
+                if (isInExhibition) {
+                  removeFromExhibition(artwork.id);
+                  showToast(
+                    `${artwork.title} has been removed from your exhibition`,
+                    'error'
+                  );
+                } else {
+                  addToExhibition(artwork);
+                  showToast(
+                    `${artwork.title} has been added to your exhibition`,
+                    'success'
+                  );
+                }
+              }}
               className={`flex items-center gap-2 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 isInExhibition 
                   ? 'border-red-600 text-red-600 hover:bg-red-50 focus:ring-red-500' 
