@@ -1,3 +1,4 @@
+import { useToast } from '../contexts/ToastContext';
 import React, { useState, useEffect } from 'react';
 import { useExhibition } from '../contexts/ExhibitionContext';
 import SearchForm from '../components/SearchForm';
@@ -13,6 +14,7 @@ import {
   getArtworksByClassification 
 } from '../api/harvardApi';
 import { Filter } from 'lucide-react';
+
 
 const FEATURED_CATEGORIES = [
   {
@@ -72,10 +74,15 @@ const Search = () => {
   });
 
   const { exhibition, addToExhibition, removeFromExhibition } = useExhibition();
+  const { showToast } = useToast();
 
   const isInExhibition = (artworkId) => {
     return exhibition.some(item => item.id === artworkId);
   };
+
+  useEffect(() => {
+    showToast('Test toast message', 'success');
+  }, [showToast]);
 
   useEffect(() => {
     let isMounted = true;
@@ -248,6 +255,14 @@ const handleSearch = async (term) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleExhibitionAction = (artwork, action) => {
+    console.log('Exhibition action triggered:', artwork.title, action); 
+    showToast(
+      `${artwork.title} has been ${action} ${action === 'added' ? 'to' : 'from'} your exhibition`,
+      action === 'added' ? 'success' : 'error'
+    );
+  };
+
   useEffect(() => {
     let filtered = [];
     
@@ -370,7 +385,8 @@ const handleSearch = async (term) => {
               artworks={filteredResults} 
               onAddToExhibition={addToExhibition}
               onRemoveFromExhibition={removeFromExhibition} 
-              isInExhibition={isInExhibition}       
+              isInExhibition={isInExhibition}
+              onExhibitionAction={handleExhibitionAction}       
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
@@ -390,12 +406,13 @@ const handleSearch = async (term) => {
                     <ArtworkList 
                       artworks={categoryArtworks}
                       onAddToExhibition={addToExhibition}
-                      onRemoveFromExhibition={removeFromExhibition}  // Add this
-                      isInExhibition={isInExhibition}                // Add this
-                      currentPage={1}
-                      totalPages={1}
-                      totalItems={categoryArtworks.length}
-                      itemsPerPage={categoryArtworks.length}
+                      onRemoveFromExhibition={removeFromExhibition}
+                      isInExhibition={isInExhibition}
+                      onExhibitionAction={handleExhibitionAction}                  
+                      // currentPage={1}
+                      // totalPages={1}
+                      // totalItems={categoryArtworks.length}
+                      // itemsPerPage={categoryArtworks.length}
                     />
                   </div>
                 ) : null;

@@ -2,24 +2,8 @@ import axios from 'axios';
 
 const API_BASE_URL = 'https://collectionapi.metmuseum.org/public/collection/v1';
 
-// export const searchArtworks = async (query) => {
-//   try {
-//     const response = await axios.get(`${API_BASE_URL}/search`, {
-//       params: {
-//         q: query,
-//         hasImages: true
-//       }
-//     });
-//     return response.data.objectIDs || [];
-//   } catch (error) {
-//     console.error('Error searching Metropolitan Museum of Art:', error);
-//     throw error;
-//   }
-// };
-
 export const searchArtworks = async (query, page = 1, limit = 20) => {
   try {
-    // First get all matching object IDs
     const response = await axios.get(`${API_BASE_URL}/search`, {
       params: {
         q: query,
@@ -30,12 +14,10 @@ export const searchArtworks = async (query, page = 1, limit = 20) => {
     const allObjectIds = response.data.objectIDs || [];
     const total = allObjectIds.length;
 
-    // Calculate pagination
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedIds = allObjectIds.slice(startIndex, endIndex);
 
-    // Fetch details for paginated IDs
     const artworksPromises = paginatedIds.map(id => getArtworkDetails(id));
     const artworks = await Promise.all(artworksPromises);
 
