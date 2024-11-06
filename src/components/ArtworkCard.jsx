@@ -87,3 +87,4 @@ const ArtworkCard = ({ artwork, onAddToExhibition, onRemove }) => {
 
 export default ArtworkCard;
 
+
