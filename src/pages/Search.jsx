@@ -71,7 +71,11 @@ const Search = () => {
     hasDetails: false
   });
 
-  const { addToExhibition } = useExhibition();
+  const { exhibition, addToExhibition, removeFromExhibition } = useExhibition();
+
+  const isInExhibition = (artworkId) => {
+    return exhibition.some(item => item.id === artworkId);
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -365,6 +369,8 @@ const handleSearch = async (term) => {
             <ArtworkList 
               artworks={filteredResults} 
               onAddToExhibition={addToExhibition}
+              onRemoveFromExhibition={removeFromExhibition} 
+              isInExhibition={isInExhibition}       
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
@@ -384,6 +390,12 @@ const handleSearch = async (term) => {
                     <ArtworkList 
                       artworks={categoryArtworks}
                       onAddToExhibition={addToExhibition}
+                      onRemoveFromExhibition={removeFromExhibition}  // Add this
+                      isInExhibition={isInExhibition}                // Add this
+                      currentPage={1}
+                      totalPages={1}
+                      totalItems={categoryArtworks.length}
+                      itemsPerPage={categoryArtworks.length}
                     />
                   </div>
                 ) : null;
