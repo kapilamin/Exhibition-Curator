@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Plus, Minus, ExternalLink } from 'lucide-react';
 
 const ArtworkCard = ({ artwork, onAddToExhibition, onRemove }) => {
-  console.log('Creating link with:', { source: artwork.source, id: artwork.id });
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="aspect-square relative">
