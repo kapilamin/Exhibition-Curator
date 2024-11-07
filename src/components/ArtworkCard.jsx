@@ -1,28 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Minus, ExternalLink } from 'lucide-react';
 
 const ArtworkCard = ({ artwork, onAddToExhibition, onRemove }) => {
+  const [isImageLoading, setIsImageLoading] = useState(true);
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="aspect-square relative">
-        {artwork.image ? (
-          <Link to={`/artwork/${artwork.source}/${artwork.id}`} className="block">
+      <div className="aspect-square relative bg-gray-100">
+        {/* Show loading spinner while loading */}
+        {isImageLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="mt-2 text-sm text-gray-500">Loading artwork...</span>
+            </div>
+          </div>
+        )}
+
+        <div className="relative h-full w-full">
+          <Link to={`/artwork/${artwork.source}/${artwork.id}`} className="block h-full">
             <img
-              src={artwork.image}
+              src={artwork.image || '/placeholder-artwork.jpg'}
               alt={artwork.title}
-              className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+              className={`w-full h-full object-cover hover:opacity-90 transition-all duration-300 ${
+                isImageLoading ? 'opacity-25' : 'opacity-100'
+              }`}
+              onLoad={() => setIsImageLoading(false)}
               onError={(e) => {
+                setIsImageLoading(false);
                 e.target.onerror = null;
                 e.target.src = '/placeholder-artwork.jpg';
               }}
             />
           </Link>
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
-            No image available
-          </div>
-        )}
+        </div>
       </div>
 
       <div className="p-4">
@@ -86,5 +98,3 @@ const ArtworkCard = ({ artwork, onAddToExhibition, onRemove }) => {
 };
 
 export default ArtworkCard;
-
-

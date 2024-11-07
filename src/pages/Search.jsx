@@ -219,6 +219,13 @@ const handleSearch = async (term) => {
         link: `https://harvardartmuseums.org/collections/object/${artwork.id}`
       }))
     ]
+
+    .sort((a, b) => {
+      if (a.source !== b.source) {
+        return a.source.localeCompare(b.source);
+      }
+      return a.id.localeCompare(b.id);
+    })
     .filter(artwork => artwork.image || !filters.hasImage)
     .slice(0, itemsPerPage);
 
@@ -424,3 +431,4 @@ const handleSearch = async (term) => {
 };
 
 export default Search;
+

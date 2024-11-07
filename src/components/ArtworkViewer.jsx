@@ -1,7 +1,7 @@
-import { useToast } from '../contexts/ToastContext';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useExhibition } from '../contexts/ExhibitionContext';
+import { useToast } from '../contexts/ToastContext';
 import { 
   getArtworkDetails as getMetArtworkDetails 
 } from '../api/metropolitanApi';
@@ -10,38 +10,28 @@ import {
 } from '../api/harvardApi';
 import { ChevronLeft, ChevronRight, Plus, Minus, ExternalLink } from 'lucide-react';
 
-const getImageUrl = (url, source) => {
-  if (!url) return null;
-  
-  if (source === 'harvard') {
-    if (url.includes('ids.lib.harvard.edu')) {
-      const baseUrl = 'https://nrs.harvard.edu/urn-3:HUAM:';
-      const imageId = url.split('/').pop().split('_')[0];
-      return `${baseUrl}${imageId}`;
-    }
-    return url;
-  }
-  
-  return url;
-};
-
 const ArtworkViewer = () => {
   const { source, id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { exhibition, addToExhibition, removeFromExhibition } = useExhibition();
   const { showToast } = useToast();
-
   
   const [artwork, setArtwork] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isImageLoading, setIsImageLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [artworkList, setArtworkList] = useState([]);
+  
 
   const isInExhibition = artwork 
     ? exhibition.some(item => item.id === artwork.id) 
     : false;
+
+  useEffect(() => {
+    setIsImageLoading(true);
+  }, [artwork?.image]); 
 
   useEffect(() => {
     const list = location.state?.artworkList || exhibition;
@@ -96,7 +86,7 @@ const ArtworkViewer = () => {
             id: artworkData.id.toString(),
             title: artworkData.title,
             artist: artworkData.people ? artworkData.people[0].name : 'Unknown Artist',
-            image: getImageUrl(artworkData.primaryimageurl, 'harvard'),
+            image: artworkData.primaryimageurl,
             source: 'harvard',
             date: artworkData.dated,
             medium: artworkData.technique,
@@ -123,6 +113,14 @@ const ArtworkViewer = () => {
     fetchArtworkDetails();
   }, [source, id]);
 
+  const handleExhibitionAction = (action) => {
+    const message = action === 'added' 
+      ? `${artwork.title} has been added to your exhibition`
+      : `${artwork.title} has been removed from your exhibition`;
+    
+    showToast(message, action === 'added' ? 'success' : 'error');
+  };
+
   const navigateToArtwork = (index) => {
     if (index >= 0 && index < artworkList.length) {
       const nextArtwork = artworkList[index];
@@ -144,23 +142,15 @@ const ArtworkViewer = () => {
     }
   };
 
-  const handleKeyPress = (event) => {
-    if (event.key === 'ArrowLeft') {
-      handlePrevious();
-    } else if (event.key === 'ArrowRight') {
-      handleNext();
-    }
-  };
-
-  const handleExhibitionAction = (action) => {
-    console.log('Exhibition action triggered:', artwork.title, action);
-    showToast(
-      `${artwork.title} has been ${action} ${action === 'added' ? 'to' : 'from'} your exhibition`,
-      action === 'added' ? 'success' : 'error'
-    );
-  };
-
   useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'ArrowLeft') {
+        handlePrevious();
+      } else if (event.key === 'ArrowRight') {
+        handleNext();
+      }
+    };
+
     document.addEventListener('keydown', handleKeyPress);
     return () => {
       document.removeEventListener('keydown', handleKeyPress);
@@ -215,7 +205,6 @@ const ArtworkViewer = () => {
       id="main-content"
       tabIndex="-1"
     >
-      {/* Hidden live region for screen readers */}
       <div 
         id="artwork-announcement" 
         className="sr-only" 
@@ -248,26 +237,37 @@ const ArtworkViewer = () => {
         aria-labelledby="artwork-title"
       >
         <div className="relative">
-          <figure className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-            {artwork.image ? (
+          <figure className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
+            {/* Show loading state until image is loaded */}
+            <div 
+              className={`absolute inset-0 flex items-center justify-center bg-gray-100 z-10 transition-opacity duration-300 ${
+                isImageLoading ? 'opacity-100 visible' : 'opacity-0 invisible'
+              }`}
+            >
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="mt-4 text-gray-500">Loading artwork...</span>
+              </div>
+            </div>
+
+            {artwork.image && (
               <img
+                key={artwork.image}
                 src={artwork.image}
                 alt={`Artwork: ${artwork.title}`}
-                className="w-full h-full object-contain"
+                className={`w-full h-full object-contain transition-opacity duration-300 ${
+                  isImageLoading ? 'opacity-0' : 'opacity-100'
+                }`}
+                onLoad={() => {
+                  setIsImageLoading(false);
+                }}
                 onError={(e) => {
+                  setIsImageLoading(false);
                   e.target.onerror = null;
                   e.target.src = '/placeholder-artwork.jpg';
                   e.target.alt = 'Artwork image not available';
                 }}
               />
-            ) : (
-              <div 
-                className="w-full h-full flex items-center justify-center text-gray-500"
-                role="img" 
-                aria-label="No image available"
-              >
-                No image available
-              </div>
             )}
           </figure>
 
@@ -373,16 +373,10 @@ const ArtworkViewer = () => {
               onClick={() => {
                 if (isInExhibition) {
                   removeFromExhibition(artwork.id);
-                  showToast(
-                    `${artwork.title} has been removed from your exhibition`,
-                    'error'
-                  );
+                  handleExhibitionAction('removed');
                 } else {
                   addToExhibition(artwork);
-                  showToast(
-                    `${artwork.title} has been added to your exhibition`,
-                    'success'
-                  );
+                  handleExhibitionAction('added');
                 }
               }}
               className={`flex items-center gap-2 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 ${
@@ -401,41 +395,41 @@ const ArtworkViewer = () => {
                 <>
                   <Plus size={20} aria-hidden="true" />
                   <span>Add to Exhibition</span>
-                </>
+                  </>
               )}
             </button>
 
             <a
-            href={artwork.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
-            aria-label={`View ${artwork.title} on museum website (opens in new tab)`}
-          >
-            <ExternalLink size={20} aria-hidden="true" />
-            <span>View on Museum Site</span>
-          </a>
+              href={artwork.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+              aria-label={`View ${artwork.title} on museum website (opens in new tab)`}
+            >
+              <ExternalLink size={20} aria-hidden="true" />
+              <span>View on Museum Site</span>
+            </a>
+          </div>
         </div>
+      </article>
+
+      <div className="mt-8 border-t border-gray-200 pt-8">
+        <p className="text-sm text-gray-500">
+          This artwork is located at {artwork.location}
+          {artwork.galleryNumber && ` in Gallery ${artwork.galleryNumber}`}.
+        </p>
       </div>
-    </article>
 
-    <div className="mt-8 border-t border-gray-200 pt-8">
-      <p className="text-sm text-gray-500">
-        This artwork is located at {artwork.location}
-        {artwork.galleryNumber && ` in Gallery ${artwork.galleryNumber}`}.
-      </p>
-    </div>
-
-    {/* Keyboard Navigation Instructions */}
-    <div 
-      className="mt-4 text-center text-sm text-gray-500"
-      role="note"
-      aria-label="Keyboard navigation instructions"
-    >
-      Use left and right arrow keys to navigate between artworks
-    </div>
-  </main>
-);
+      {/* Keyboard Navigation Instructions */}
+      <div 
+        className="mt-4 text-center text-sm text-gray-500"
+        role="note"
+        aria-label="Keyboard navigation instructions"
+      >
+        Use left and right arrow keys to navigate between artworks
+      </div>
+    </main>
+  );
 };
 
 export default ArtworkViewer;

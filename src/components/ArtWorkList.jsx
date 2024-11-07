@@ -2,6 +2,99 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Minus, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 
+const ArtworkCard = ({ artwork, index, artworkList, onAddToExhibition, isInExhibition, onExhibitionAction, onRemoveFromExhibition }) => {
+    const [isImageLoading, setIsImageLoading] = useState(true);
+  
+    return (
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="aspect-square relative">
+          {/* Loading State */}
+          {isImageLoading && (
+            <div className="absolute inset-0 z-10 bg-gray-100 flex items-center justify-center">
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="mt-2 text-sm text-gray-500">Loading artwork...</span>
+              </div>
+            </div>
+          )}
+          
+          <Link 
+            to={`/artwork/${artwork.source}/${artwork.id}`} 
+            state={{ artworkList, currentIndex: index }}
+            className="block"
+          >
+            <img
+              src={artwork.image}
+              alt={artwork.title}
+              className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+              onLoad={() => {
+                setIsImageLoading(false);
+              }}
+              onError={(e) => {
+                setIsImageLoading(false);
+                e.target.onerror = null;
+                e.target.src = '/api/placeholder/400/400';
+              }}
+            />
+          </Link>
+        </div>
+  
+        <div className="p-4">
+          <h3 className="text-lg font-semibold line-clamp-2">
+            <Link 
+              to={`/artwork/${artwork.source}/${artwork.id}`}
+              state={{ artworkList, currentIndex: index }}
+              className="text-blue-600 hover:text-purple-600 transition-colors"
+            >
+              {artwork.title}
+            </Link>
+          </h3>
+          
+          <p className="text-gray-600 mt-1 mb-2">
+            {artwork.artist || 'Unknown Artist'}
+          </p>
+          
+          <div className="mt-4 flex justify-between items-center">
+            {isInExhibition(artwork.id) ? (
+              <button
+                onClick={() => {
+                  onRemoveFromExhibition(artwork.id);
+                  onExhibitionAction?.(artwork, 'removed');
+                }}
+                className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                aria-label="Remove from exhibition"
+              >
+                <Minus size={16} />
+                <span className="text-sm font-medium">Remove</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  onAddToExhibition(artwork);
+                  onExhibitionAction?.(artwork, 'added');
+                }}
+                className="flex items-center gap-1 text-green-600 hover:text-green-700"
+                aria-label="Add to exhibition"
+              >
+                <Plus size={16} />
+                <span className="text-sm font-medium">Add</span>
+              </button>
+            )}
+            
+            <Link
+              to={`/artwork/${artwork.source}/${artwork.id}`}
+              state={{ artworkList, currentIndex: index }}
+              className="flex items-center gap-1 text-purple-600 hover:text-purple-700"
+            >
+              <span className="text-sm font-medium">View Details</span>
+              <ExternalLink size={16} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 const ArtworkList = ({ 
   artworks, 
   onAddToExhibition,
@@ -88,58 +181,21 @@ const ArtworkList = ({
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {artworks.map((artwork, index) => (
-          <div key={artwork.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-            <Link 
-              to={`/artwork/${artwork.source}/${artwork.id}`} 
-              state={{ artworkList: artworks, currentIndex: index }}
-              className="block"
-            >
-              <div className="aspect-square relative">
-                <img
-                  src={artwork.image}
-                  alt={artwork.title}
-                  className="w-full h-full object-cover hover:opacity-90 transition-opacity"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = '/api/placeholder/400/400';
-                  }}
-                />
-              </div>
-            </Link>
-
-            <div className="p-4">
-              <h3 className="text-lg font-semibold line-clamp-2">
-                <Link 
-                  to={`/artwork/${artwork.source}/${artwork.id}`}
-                  state={{ artworkList: artworks, currentIndex: index }}
-                  className="text-blue-600 hover:text-purple-600 transition-colors"
-                >
-                  {artwork.title}
-                </Link>
-              </h3>
-              
-              <p className="text-gray-600 mt-1 mb-2">
-                {artwork.artist || 'Unknown Artist'}
-              </p>
-              
-              <div className="mt-4 flex justify-between items-center">
-                {renderExhibitionButton(artwork)}
-                
-                <Link
-                  to={`/artwork/${artwork.source}/${artwork.id}`}
-                  state={{ artworkList: artworks, currentIndex: index }}
-                  className="flex items-center gap-1 text-purple-600 hover:text-purple-700"
-                >
-                  <span className="text-sm font-medium">View Details</span>
-                  <ExternalLink size={16} />
-                </Link>
-              </div>
-            </div>
-          </div>
+            <ArtworkCard
+            key={artwork.id}
+            artwork={artwork}
+            index={index}
+            artworkList={artworks}
+            onAddToExhibition={onAddToExhibition}
+            onRemoveFromExhibition={onRemoveFromExhibition}
+            isInExhibition={isInExhibition}
+            onExhibitionAction={onExhibitionAction}
+            />
         ))}
-      </div>
+        </div>
+
 
       {totalPages > 1 && (
         <div className="mt-8 flex flex-col items-center gap-4">
@@ -326,3 +382,5 @@ const ArtworkList = ({
 };
 
 export default ArtworkList;
+
+
