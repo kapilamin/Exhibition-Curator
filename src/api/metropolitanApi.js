@@ -1,21 +1,26 @@
 import axios from 'axios';
 
 const API_BASE_URL = 'https://collectionapi.metmuseum.org/public/collection/v1';
-const BATCH_SIZE = 10; // Process 10 artworks at a time
+const PAGE_SIZE = 40;
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 8000
+});
 
 const fetchWithRetry = async (objectId) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/objects/${objectId}`);
+    const response = await api.get(`/objects/${objectId}`);
     return response.data;
-  } catch (error) {
-    console.error(`Failed to fetch Met artwork ${objectId}:`, error);
+  } catch {
     return null;
   }
 };
 
-export const searchArtworks = async (query, page = 1, limit = 18) => {
-  try {    
-    const searchResponse = await axios.get(`${API_BASE_URL}/search`, {
+export const searchArtworks = async (query) => {
+  try {
+    
+    const searchResponse = await api.get('/search', {
       params: {
         q: query,
         hasImages: true
@@ -23,66 +28,101 @@ export const searchArtworks = async (query, page = 1, limit = 18) => {
     });
 
     const allObjectIds = searchResponse.data.objectIDs || [];
+    const initialTotal = allObjectIds.length;
 
     if (!allObjectIds.length) {
       return {
         items: [],
-        total: allObjectIds.length,
-        page,
-        totalPages: 0
+        total: 0,
+        initialTotal: 0,
+        hasMore: false,
+        allIds: []
       };
     }
 
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const pageObjectIds = allObjectIds.slice(startIndex, endIndex);
+    // Get initial batch of IDs
+    const initialIds = allObjectIds.slice(0, PAGE_SIZE);
+    
+    // Fetch initial batch
+    const results = await Promise.all(
+      initialIds.map(id => fetchWithRetry(id))
+    );
 
-    const results = [];
-    for (let i = 0; i < pageObjectIds.length; i += BATCH_SIZE) {
-      const batch = pageObjectIds.slice(i, i + BATCH_SIZE);
-      
-      const batchResults = await Promise.all(
-        batch.map(id => fetchWithRetry(id))
-      );
-
-      results.push(...batchResults.filter(Boolean));
-
-      // Small delay between batches
-      if (i + BATCH_SIZE < pageObjectIds.length) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    }
-
-    const formattedArtworks = results.map(artwork => ({
-      id: artwork.objectID?.toString(),
-      title: artwork.title || 'Untitled',
-      artist: artwork.artistDisplayName || 'Unknown Artist',
-      image: artwork.primaryImageSmall || artwork.primaryImage || '',
-      source: 'met',
-      date: artwork.objectDate || '',
-      medium: artwork.medium || '',
-      dimensions: artwork.dimensions || '',
-      link: artwork.objectURL || '',
-      hasImage: Boolean(artwork.primaryImageSmall || artwork.primaryImage)
-    }));
+    const formattedResults = results
+      .filter(Boolean)
+      .map(artwork => ({
+        id: artwork.objectID?.toString(),
+        title: artwork.title || 'Untitled',
+        artist: artwork.artistDisplayName || 'Unknown Artist',
+        image: artwork.primaryImageSmall || artwork.primaryImage || '',
+        source: 'met',
+        date: artwork.objectDate || '',
+        medium: artwork.medium || '',
+        dimensions: artwork.dimensions || '',
+        link: artwork.objectURL || '',
+        hasImage: Boolean(artwork.primaryImageSmall || artwork.primaryImage)
+      }));
 
     return {
-      items: formattedArtworks,
-      total: allObjectIds.length,
-      page,
-      totalPages: Math.ceil(allObjectIds.length / limit)
+      items: formattedResults,
+      total: formattedResults.length,
+      initialTotal,
+      hasMore: PAGE_SIZE < allObjectIds.length,
+      nextIndex: PAGE_SIZE,
+      allIds: allObjectIds
     };
 
   } catch (error) {
     console.error('Met API Error:', error);
-    return { items: [], total: 0, page, totalPages: 0 };
+    return { 
+      items: [], 
+      total: 0, 
+      initialTotal: 0,
+      hasMore: false,
+      allIds: []
+    };
+  }
+};
+
+// Add this new function to load more results
+export const loadMoreArtworks = async (allIds, startIndex) => {
+  try {
+    const batchIds = allIds.slice(startIndex, startIndex + PAGE_SIZE);
+    
+    const results = await Promise.all(
+      batchIds.map(id => fetchWithRetry(id))
+    );
+
+    const formattedResults = results
+      .filter(Boolean)
+      .map(artwork => ({
+        id: artwork.objectID?.toString(),
+        title: artwork.title || 'Untitled',
+        artist: artwork.artistDisplayName || 'Unknown Artist',
+        image: artwork.primaryImageSmall || artwork.primaryImage || '',
+        source: 'met',
+        date: artwork.objectDate || '',
+        medium: artwork.medium || '',
+        dimensions: artwork.dimensions || '',
+        link: artwork.objectURL || '',
+        hasImage: Boolean(artwork.primaryImageSmall || artwork.primaryImage)
+      }));
+
+    return {
+      items: formattedResults,
+      hasMore: startIndex + PAGE_SIZE < allIds.length,
+      nextIndex: startIndex + PAGE_SIZE
+    };
+  } catch (error) {
+    console.error('Error loading more artworks:', error);
+    return { items: [], hasMore: false, nextIndex: startIndex };
   }
 };
 
 export const getArtworksByDepartment = async (departmentId, limit = 8) => {
   try {
-
-    const searchResponse = await axios.get(`${API_BASE_URL}/search`, {
+    
+    const searchResponse = await api.get('/search', {
       params: {
         departmentId,
         q: "*",
@@ -91,17 +131,13 @@ export const getArtworksByDepartment = async (departmentId, limit = 8) => {
     });
 
     const allObjectIds = searchResponse.data.objectIDs || [];
-    const selectedIds = allObjectIds.slice(0, limit);
+    const selectedIds = allObjectIds.slice(0, limit * 2);
     
-    const artworks = await Promise.all(
-      selectedIds.map(id => 
-        axios.get(`${API_BASE_URL}/objects/${id}`)
-          .then(response => response.data)
-          .catch(() => null)
-      )
+    const results = await Promise.all(
+      selectedIds.map(id => fetchWithRetry(id))
     );
 
-    return artworks
+    return results
       .filter(artwork => artwork?.primaryImageSmall)
       .slice(0, limit);
 

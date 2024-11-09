@@ -7,6 +7,7 @@ import ArtworkList from '../components/ArtworkList';
 import { 
   searchArtworks as searchMetArtworks, 
   getArtworksByDepartment,
+  loadMoreArtworks
 } from '../api/metropolitanApi';
 import { 
   searchArtworks as searchHarvardArtworks, 
@@ -77,6 +78,11 @@ const Search = () => {
     return exhibition.some(item => item.id === artworkId);
   };
 
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [nextIndex, setNextIndex] = useState(0);
+  const [allMetIds, setAllMetIds] = useState([]);
+
 
   const handleSearch = async (term) => {
     let isMounted = true;
@@ -89,6 +95,9 @@ const Search = () => {
       setTotalItems(0);
       setTotalPages(0);
       setCurrentPage(1);
+      setHasMore(false);
+      setNextIndex(0);
+      setAllMetIds([]);
       return;
     }
   
@@ -98,24 +107,22 @@ const Search = () => {
     setCurrentPage(1);
   
     try {
+      
       const [metResults, harvardResults] = await Promise.all([
-        searchMetArtworks(term, currentPage, itemsPerPage),
+        searchMetArtworks(term),
         searchHarvardArtworks(term)
       ]);
-  
+    
       const metArtworks = metResults?.items || [];
-      const harvardArtworks = harvardResults?.items || [];
-  
+      const harvardArtworks = harvardResults?.items || [];  
       const combinedResults = [...metArtworks, ...harvardArtworks];
   
-      const totalMetItems = metResults.total || 0;
-      const totalHarvardItems = harvardResults.total || 0;
-      
-      setTotalItems(totalMetItems + totalHarvardItems);
-      setTotalPages(Math.ceil((totalMetItems + totalHarvardItems) / itemsPerPage));
+      setHasMore(metResults.hasMore);
+      setNextIndex(metResults.nextIndex);
+      setAllMetIds(metResults.allIds);
       setAllResults(combinedResults);
       applyFiltersAndPagination(combinedResults, 1);
-  
+
     } catch (error) {
       console.error('Search failed:', error);
       setError('An error occurred while searching. Please try again.');
@@ -129,21 +136,67 @@ const Search = () => {
   };
 
 
-  const applyFiltersAndPagination = (results, page) => {
+  const handleLoadMore = async () => {
+    if (!hasMore || isLoadingMore) return;
 
+    setIsLoadingMore(true);
+    try {
+      const moreResults = await loadMoreArtworks(allMetIds, nextIndex);
+      
+      if (moreResults.items.length) {
+        const newResults = [...allResults, ...moreResults.items];
+        setAllResults(newResults);
+        setHasMore(moreResults.hasMore);
+        setNextIndex(moreResults.nextIndex);
+        applyFiltersAndPagination(newResults, currentPage);
+      }
+    } catch (error) {
+      console.error('Failed to load more results:', error);
+      setError('Failed to load more results. Please try again.');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const LoadMoreButton = () => {
+    if (!hasMore || !hasSearched) return null;
+
+    return (
+      <div className="mt-8 text-center">
+        <button
+          onClick={handleLoadMore}
+          disabled={isLoadingMore}
+          className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+        >
+          {isLoadingMore ? (
+            <span className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Loading more...
+            </span>
+          ) : (
+            'Load More Results'
+          )}
+        </button>
+      </div>
+    );
+  };
+
+
+  const applyFiltersAndPagination = (results, page) => {
+  
     let filtered = [...results];
+    let filterLog = {};
   
     if (filters.source !== 'all') {
-      const beforeCount = filtered.length;
       filtered = filtered.filter(artwork => artwork.source === filters.source);
     }
   
     if (filters.hasImage) {
-      const beforeCount = filtered.length;
       filtered = filtered.filter(artwork => {
         const hasValidImage = Boolean(artwork.image);
         return hasValidImage;
       });
+
     }
   
     if (filters.hasDetails) {
@@ -155,6 +208,11 @@ const Search = () => {
         ) && Boolean(artwork.dimensions && artwork.dimensions.trim());
         return hasValidDetails;
       });
+      filterLog.details = {
+        before: beforeCount,
+        after: filtered.length,
+        removed: beforeCount - filtered.length
+      };
     }
   
     if (filters.medium !== 'all') {
@@ -165,6 +223,11 @@ const Search = () => {
         const matches = keywords.some(keyword => mediumText.includes(keyword));
         return matches;
       });
+      filterLog.medium = {
+        before: beforeCount,
+        after: filtered.length,
+        removed: beforeCount - filtered.length
+      };
     }
   
     if (filters.period !== 'all') {
@@ -183,9 +246,13 @@ const Search = () => {
             default: matches = true;
           }
         }
-        
         return matches;
       });
+      filterLog.period = {
+        before: beforeCount,
+        after: filtered.length,
+        removed: beforeCount - filtered.length
+      };
     }
     
     filtered.sort((a, b) => {
@@ -213,9 +280,9 @@ const Search = () => {
     setTotalItems(total);
     setTotalPages(totalPagesCount);
     setDisplayedResults(filtered.slice(startIndex, endIndex));
+  
   };
   
-
   const handleExhibitionAction = (artwork, action) => {
     showToast(
       `${artwork.title} has been ${action} ${action === 'added' ? 'to' : 'from'} your exhibition`,
@@ -356,6 +423,7 @@ const Search = () => {
                 totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
               />
+              <LoadMoreButton />
             </>
           ) : (
             <div className="space-y-12">
@@ -386,15 +454,15 @@ const Search = () => {
           )}
         </>
       )}
+  
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default Search;
+  export default Search;
