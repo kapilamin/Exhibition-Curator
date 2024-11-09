@@ -1,6 +1,22 @@
 import React from 'react';
 
 const SearchFilters = ({ filters, setFilters }) => {
+  const handleFilterChange = (filterName, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterName]: value
+    }));
+  };
+
+  const defaultFilters = {
+    source: 'all',
+    sortBy: 'title',
+    period: 'all',
+    medium: 'all',
+    hasImage: true,
+    hasDetails: false
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border mb-6" role="region" aria-label="Search filters">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -12,7 +28,7 @@ const SearchFilters = ({ filters, setFilters }) => {
           <select
             id="source"
             value={filters.source}
-            onChange={(e) => setFilters(prev => ({ ...prev, source: e.target.value }))}
+            onChange={(e) => handleFilterChange('source', e.target.value)}
             className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
           >
             <option value="all">All Museums</option>
@@ -29,7 +45,7 @@ const SearchFilters = ({ filters, setFilters }) => {
           <select
             id="sortBy"
             value={filters.sortBy}
-            onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
+            onChange={(e) => handleFilterChange('sortBy', e.target.value)}
             className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
           >
             <option value="title">Title (A-Z)</option>
@@ -47,7 +63,7 @@ const SearchFilters = ({ filters, setFilters }) => {
           <select
             id="period"
             value={filters.period}
-            onChange={(e) => setFilters(prev => ({ ...prev, period: e.target.value }))}
+            onChange={(e) => handleFilterChange('period', e.target.value)}
             className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
           >
             <option value="all">All Periods</option>
@@ -67,7 +83,7 @@ const SearchFilters = ({ filters, setFilters }) => {
           <select
             id="medium"
             value={filters.medium}
-            onChange={(e) => setFilters(prev => ({ ...prev, medium: e.target.value }))}
+            onChange={(e) => handleFilterChange('medium', e.target.value)}
             className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
           >
             <option value="all">All Mediums</option>
@@ -86,7 +102,7 @@ const SearchFilters = ({ filters, setFilters }) => {
           <input
             type="checkbox"
             checked={filters.hasImage}
-            onChange={(e) => setFilters(prev => ({ ...prev, hasImage: e.target.checked }))}
+            onChange={(e) => handleFilterChange('hasImage', e.target.checked)}
             className="rounded border-gray-300 text-purple-600 focus:ring-purple-500
                      cursor-pointer w-4 h-4"
             id="hasImage"
@@ -98,7 +114,7 @@ const SearchFilters = ({ filters, setFilters }) => {
           <input
             type="checkbox"
             checked={filters.hasDetails}
-            onChange={(e) => setFilters(prev => ({ ...prev, hasDetails: e.target.checked }))}
+            onChange={(e) => handleFilterChange('hasDetails', e.target.checked)}
             className="rounded border-gray-300 text-purple-600 focus:ring-purple-500
                      cursor-pointer w-4 h-4"
             id="hasDetails"
@@ -110,14 +126,9 @@ const SearchFilters = ({ filters, setFilters }) => {
       {/* Reset Filters Button */}
       <div className="mt-6 pt-6 border-t border-gray-200">
         <button
-          onClick={() => setFilters({
-            source: 'all',
-            sortBy: 'title',
-            period: 'all',
-            medium: 'all',
-            hasImage: true,
-            hasDetails: false
-          })}
+          onClick={() => {
+            setFilters(defaultFilters);
+          }}
           className="text-sm text-purple-600 hover:text-purple-700 font-medium
                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded"
           aria-label="Reset all filters to default values"

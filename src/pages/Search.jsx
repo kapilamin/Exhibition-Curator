@@ -7,14 +7,12 @@ import ArtworkList from '../components/ArtworkList';
 import { 
   searchArtworks as searchMetArtworks, 
   getArtworksByDepartment,
-  getArtworkDetails as getMetArtworkDetails 
 } from '../api/metropolitanApi';
 import { 
   searchArtworks as searchHarvardArtworks, 
   getArtworksByClassification 
 } from '../api/harvardApi';
 import { Filter } from 'lucide-react';
-
 
 const FEATURED_CATEGORIES = [
   {
@@ -37,32 +35,31 @@ const MEDIUM_KEYWORDS = {
   'painting': ['oil', 'acrylic', 'tempera', 'panel', 'canvas', 'painting'],
   'sculpture': ['sculpture', 'bronze', 'marble', 'stone', 'wood', 'ceramic', 'terracotta', 'plaster'],
   'photography': ['photograph', 'gelatin', 'silver', 'print', 'daguerreotype'],
-  'prints': ['print', 'etching', 'engraving', 'lithograph', 'woodcut'],
-  'drawings': ['drawing', 'graphite', 'charcoal', 'chalk', 'pencil', 'ink', 'watercolor', 'pastel'],
+  'prints': ['print', 'etching', 'engraving', 'lithograph', 'woodcut', 'drawing', 'graphite', 'charcoal', 'chalk', 'pencil', 'ink', 'watercolor', 'pastel'],
   'decorative': ['furniture', 'textile', 'ceramic', 'glass', 'metal', 'jewelry', 'decorative']
 };
 
 const getYearFromDate = (dateStr) => {
   if (!dateStr) return null;
-  const match = dateStr.match(/\d{4}/);
-  return match ? parseInt(match[0]) : null;
+  const matches = dateStr.match(/\d{4}/g);
+  if (!matches) return null;
+  return parseInt(matches[matches.length - 1]);
 };
 
 const Search = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [results, setResults] = useState([]);
-  const [filteredResults, setFilteredResults] = useState([]);
+  const [allResults, setAllResults] = useState([]);
+  const [displayedResults, setDisplayedResults] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [featuredArtworks, setFeaturedArtworks] = useState({});
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const itemsPerPage = 20;
-
-  const [showFilters, setShowFilters] = useState(false);
-  const [featuredArtworks, setFeaturedArtworks] = useState({});
+  const itemsPerPage = 18;
 
   const [filters, setFilters] = useState({
     source: 'all',
@@ -80,240 +77,190 @@ const Search = () => {
     return exhibition.some(item => item.id === artworkId);
   };
 
-  useEffect(() => {
+
+  const handleSearch = async (term) => {
     let isMounted = true;
-
-    const fetchFeaturedArtworks = async () => {
-      if (!isMounted) return;
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const categoryResults = await Promise.all(
-          FEATURED_CATEGORIES.map(async (category) => {
-            try {
-              if (category.source === 'met') {
-                const ids = await getArtworksByDepartment(category.departmentId, category.limit);
-                if (!isMounted) return null;
-                
-                const artworksPromises = ids.map(id => getMetArtworkDetails(id));
-                const details = await Promise.all(artworksPromises);
-                if (!isMounted) return null;
-
-                return {
-                  ...category,
-                  artworks: details.map(artwork => ({
-                    id: artwork.objectID.toString(),
-                    title: artwork.title,
-                    artist: artwork.artistDisplayName || 'Unknown',
-                    image: artwork.primaryImageSmall,
-                    source: 'met',
-                    date: artwork.objectDate,
-                    medium: artwork.medium,
-                    dimensions: artwork.dimensions,
-                    link: artwork.objectURL
-                  })).filter(art => art.image)
-                };
-              } else {
-                const artworks = await getArtworksByClassification(category.classification, category.limit);
-                if (!isMounted) return null;
-
-                return {
-                  ...category,
-                  artworks: artworks.map(artwork => ({
-                    id: artwork.id.toString(),
-                    title: artwork.title,
-                    artist: artwork.people ? artwork.people[0].name : 'Unknown',
-                    image: artwork.primaryimageurl,
-                    source: 'harvard',
-                    date: artwork.dated,
-                    medium: artwork.classification,
-                    dimensions: artwork.dimensions,
-                    link: `https://harvardartmuseums.org/collections/object/${artwork.id}`
-                  })).filter(art => art.image)
-                };
-              }
-            } catch (error) {
-              console.error(`Error fetching ${category.title}:`, error);
-              return { ...category, artworks: [], error: true };
-            }
-          })
-        );
-
-        if (!isMounted) return;
-
-        const artworksMap = categoryResults.reduce((acc, category) => {
-          if (category) {
-            acc[category.id] = category;
-          }
-          return acc;
-        }, {});
-
-        setFeaturedArtworks(artworksMap);
-      } catch (error) {
-        if (isMounted) {
-          console.error('Error fetching featured artworks:', error);
-          setError('Failed to load featured artworks. Please try again later.');
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchFeaturedArtworks();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-const handleSearch = async (term) => {
-  let isMounted = true;
-  setSearchTerm(term);
-  
-  if (!term.trim()) {
-    setHasSearched(false);
-    setResults([]);
-    setFilteredResults([]);
-    setTotalItems(0);
-    setTotalPages(0);
-    return;
-  }
-
-  setIsLoading(true);
-  setError(null);
-  setHasSearched(true);
-
-  try {
-    const perApiLimit = Math.floor(itemsPerPage / 2);
-
-    const [metResults, harvardResults] = await Promise.all([
-      searchMetArtworks(term, currentPage, perApiLimit),
-      searchHarvardArtworks(term, currentPage, perApiLimit)
-    ]);
-
-    if (!isMounted) return;
-
-    const combinedResults = [
-      ...(metResults.items || []).map(artwork => ({
-        id: artwork.objectID.toString(),
-        title: artwork.title,
-        artist: artwork.artistDisplayName || 'Unknown',
-        image: artwork.primaryImageSmall,
-        source: 'met',
-        date: artwork.objectDate,
-        medium: artwork.medium,
-        dimensions: artwork.dimensions,
-        link: artwork.objectURL
-      })),
-      ...(harvardResults.items || []).map(artwork => ({
-        id: artwork.id.toString(),
-        title: artwork.title,
-        artist: artwork.people ? artwork.people[0].name : 'Unknown',
-        image: artwork.primaryimageurl,
-        source: 'harvard',
-        date: artwork.dated,
-        medium: artwork.classification,
-        dimensions: artwork.dimensions,
-        link: `https://harvardartmuseums.org/collections/object/${artwork.id}`
-      }))
-    ]
-
-    .sort((a, b) => {
-      if (a.source !== b.source) {
-        return a.source.localeCompare(b.source);
-      }
-      return a.id.localeCompare(b.id);
-    })
-    .filter(artwork => artwork.image || !filters.hasImage)
-    .slice(0, itemsPerPage);
-
-    const totalItems = metResults.total + harvardResults.total;
-    const totalPages = Math.max(
-      metResults.totalPages,
-      harvardResults.totalPages
-    );
-
-    setResults(combinedResults);
-    setTotalItems(totalItems);
-    setTotalPages(totalPages);
-  } catch (error) {
-    console.error('Search failed:', error);
-    setError('An error occurred while searching. Please try again.');
-    setResults([]);
-    setFilteredResults([]);
-    setTotalItems(0);
-    setTotalPages(0);
-  } finally {
-    if (isMounted) {
-      setIsLoading(false);
-    }
-  }
-};
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    handleSearch(searchTerm);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleExhibitionAction = (artwork, action) => {
-    showToast(
-      `${artwork.title} has been ${action} ${action === 'added' ? 'to' : 'from'} your exhibition`,
-      action === 'added' ? 'success' : 'error'
-    );
-  };
-
-  useEffect(() => {
-    let filtered = [];
+    setSearchTerm(term);
     
-    if (hasSearched) {
-      filtered = [...results];
-    } else {
-      filtered = Object.values(featuredArtworks).reduce((acc, category) => {
-        return [...acc, ...(category.artworks || [])];
-      }, []);
+    if (!term.trim()) {
+      setHasSearched(false);
+      setAllResults([]);
+      setDisplayedResults([]);
+      setTotalItems(0);
+      setTotalPages(0);
+      setCurrentPage(1);
+      return;
     }
-
-    if (filters.source !== 'all') {
-      filtered = filtered.filter(artwork => artwork.source === filters.source);
-    }
-
-    filtered = filtered.filter(artwork => {
-      if (filters.medium !== 'all') {
-        const normalizedMedium = artwork.medium?.toLowerCase() || '';
-        const selectedMedium = filters.medium.toLowerCase();
-        const keywords = MEDIUM_KEYWORDS[selectedMedium] || [];
-        if (!keywords.some(keyword => normalizedMedium.includes(keyword))) {
-          return false;
-        }
-      }
-
-      if (filters.hasImage && !artwork.image) return false;
-      if (filters.hasDetails && (!artwork.medium || !artwork.dimensions)) return false;
-
-      if (filters.period !== 'all') {
-        const year = getYearFromDate(artwork.date);
-        if (!year) return false;
-        
-        switch (filters.period) {
-          case 'ancient': return year < 500;
-          case 'medieval': return year >= 500 && year < 1400;
-          case 'renaissance': return year >= 1400 && year < 1600;
-          case 'modern': return year >= 1600 && year < 1900;
-          case 'contemporary': return year >= 1900;
-          default: return true;
-        }
-      }
+  
+    setIsLoading(true);
+    setError(null);
+    setHasSearched(true);
+    setCurrentPage(1);
+  
+    try {
+      console.log('Starting search for:', term);
       
-      return true;
-    });
+      const [metResults, harvardResults] = await Promise.all([
+        searchMetArtworks(term),
+        searchHarvardArtworks(term)
+      ]);
+  
+      console.log('Raw API Results:', { met: metResults, harvard: harvardResults });
+  
+      const metArtworks = metResults?.items || [];
+      console.log('Met artworks:', {
+        count: metArtworks.length,
+        sample: metArtworks[0]
+      });
+  
+      const harvardArtworks = harvardResults?.items || [];
+      console.log('Harvard artworks:', {
+        count: harvardArtworks.length,
+        sample: harvardArtworks[0]
+      });
+  
+      const combinedResults = [...metArtworks, ...harvardArtworks];
+      console.log('Combined results:', {
+        total: combinedResults.length,
+        met: metArtworks.length,
+        harvard: harvardArtworks.length
+      });
+  
+      setAllResults(combinedResults);
+      applyFiltersAndPagination(combinedResults, 1);
+  
+    } catch (error) {
+      console.error('Search failed:', error);
+      setError('An error occurred while searching. Please try again.');
+      setAllResults([]);
+      setDisplayedResults([]);
+    } finally {
+      if (isMounted) {
+      setIsLoading(false);
+      }
+    }
+  };
 
+  const applyFiltersAndPagination = (results, page) => {
+    console.log('Starting filter application with:', {
+      resultsCount: results.length,
+      filters: filters,
+      sampleArtwork: results[0]
+    });
+  
+    let filtered = [...results];
+    let filterLog = {};
+  
+    if (filters.source !== 'all') {
+      const beforeCount = filtered.length;
+      filtered = filtered.filter(artwork => artwork.source === filters.source);
+      filterLog.source = {
+        before: beforeCount,
+        after: filtered.length,
+        removed: beforeCount - filtered.length
+      };
+    }
+  
+    if (filters.hasImage) {
+      const beforeCount = filtered.length;
+      filtered = filtered.filter(artwork => {
+        const hasValidImage = Boolean(artwork.image);
+        console.log('Image filter check:', {
+          id: artwork.id,
+          hasImage: artwork.hasImage,
+          actualImage: artwork.image,
+          hasValidImage
+        });
+        return hasValidImage;
+      });
+      filterLog.image = {
+        before: beforeCount,
+        after: filtered.length,
+        removed: beforeCount - filtered.length
+      };
+    }
+  
+    if (filters.hasDetails) {
+      const beforeCount = filtered.length;
+      filtered = filtered.filter(artwork => {
+        const hasValidDetails = Boolean(
+          (artwork.medium && artwork.medium.trim()) || 
+          (artwork.classification && artwork.classification.trim())
+        ) && Boolean(artwork.dimensions && artwork.dimensions.trim());
+        console.log('Details check:', {
+          id: artwork.id,
+          medium: artwork.medium,
+          dimensions: artwork.dimensions,
+          hasValidDetails
+        });
+        return hasValidDetails;
+      });
+      filterLog.details = {
+        before: beforeCount,
+        after: filtered.length,
+        removed: beforeCount - filtered.length
+      };
+    }
+  
+    if (filters.medium !== 'all') {
+      const beforeCount = filtered.length;
+      const keywords = MEDIUM_KEYWORDS[filters.medium.toLowerCase()] || [];
+      filtered = filtered.filter(artwork => {
+        const mediumText = (artwork.medium || '').toLowerCase();
+        const matches = keywords.some(keyword => mediumText.includes(keyword));
+        console.log('Medium check:', {
+          id: artwork.id,
+          medium: mediumText,
+          keywords,
+          matches
+        });
+        return matches;
+      });
+      filterLog.medium = {
+        before: beforeCount,
+        after: filtered.length,
+        removed: beforeCount - filtered.length
+      };
+    }
+  
+    if (filters.period !== 'all') {
+      const beforeCount = filtered.length;
+      filtered = filtered.filter(artwork => {
+        const year = getYearFromDate(artwork.date);
+        let matches = false;
+        
+        if (year) {
+          switch (filters.period) {
+            case 'ancient': matches = year < 500; break;
+            case 'medieval': matches = year >= 500 && year < 1400; break;
+            case 'renaissance': matches = year >= 1400 && year < 1600; break;
+            case 'modern': matches = year >= 1600 && year < 1900; break;
+            case 'contemporary': matches = year >= 1900; break;
+            default: matches = true;
+          }
+        }
+        
+        console.log('Period check:', {
+          id: artwork.id,
+          date: artwork.date,
+          year,
+          matches
+        });
+        return matches;
+      });
+      filterLog.period = {
+        before: beforeCount,
+        after: filtered.length,
+        removed: beforeCount - filtered.length
+      };
+    }
+  
+    console.log('Filter application log:', filterLog);
+  
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'title':
-          return a.title.localeCompare(b.title);
+          return (a.title || '').localeCompare(b.title || '');
         case 'artist':
           return (a.artist || 'Unknown').localeCompare(b.artist || 'Unknown');
         case 'dateAsc':
@@ -326,13 +273,100 @@ const handleSearch = async (term) => {
           return 0;
       }
     });
+  
+    const total = filtered.length;
+    const totalPagesCount = Math.ceil(total / itemsPerPage);
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    
+    setTotalItems(total);
+    setTotalPages(totalPagesCount);
+    setDisplayedResults(filtered.slice(startIndex, endIndex));
+  
+    console.log('Final results:', {
+      totalResults: total,
+      currentPage: page,
+      resultsOnPage: filtered.slice(startIndex, endIndex).length,
+      sampleResult: filtered[0]
+    });
+  };
+  
 
-    setFilteredResults(filtered);
-  }, [results, featuredArtworks, filters, hasSearched]);
+  const handleExhibitionAction = (artwork, action) => {
+    showToast(
+      `${artwork.title} has been ${action} ${action === 'added' ? 'to' : 'from'} your exhibition`,
+      action === 'added' ? 'success' : 'error'
+    );
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    applyFiltersAndPagination(allResults, newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const fetchFeaturedArtworks = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const categoriesMap = {};
+        
+        await Promise.all(FEATURED_CATEGORIES.map(async (category) => {
+          const artworks = category.source === 'met'
+            ? await getArtworksByDepartment(category.departmentId, category.limit)
+            : await getArtworksByClassification(category.classification, category.limit);
+
+          if (artworks.length > 0) {
+            categoriesMap[category.id] = {
+              ...category,
+              artworks: artworks
+                .filter(artwork => artwork?.primaryImageSmall || artwork?.primaryimageurl)
+                .map(artwork => ({
+                  id: (artwork.objectID || artwork.id)?.toString() || '',
+                  title: artwork.title || 'Untitled',
+                  artist: artwork.artistDisplayName || artwork.people?.[0]?.name || 'Unknown Artist',
+                  image: artwork.primaryImageSmall || artwork.primaryimageurl || '',
+                  source: category.source,
+                  date: artwork.objectDate || artwork.dated || '',
+                  medium: artwork.medium || artwork.technique || artwork.classification || '',
+                  dimensions: artwork.dimensions || '',
+                  link: category.source === 'met' 
+                    ? artwork.objectURL 
+                    : `https://harvardartmuseums.org/collections/object/${artwork.id}`,
+                  hasImage: true,
+                  hasDetails: Boolean(artwork.medium || artwork.technique) && Boolean(artwork.dimensions)
+                }))
+            };
+          }
+        }));
+
+        setFeaturedArtworks(categoriesMap);
+      } catch (error) {
+        console.error('Error fetching featured artworks:', error);
+        setError('Failed to load featured artworks');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFeaturedArtworks();
+  }, []);
+
+  useEffect(() => {
+    if (hasSearched) {
+      applyFiltersAndPagination(allResults, currentPage);
+    } else if (Object.keys(featuredArtworks).length > 0) {
+      const featuredResults = Object.values(featuredArtworks).reduce((acc, category) => {
+        return category?.artworks ? [...acc, ...category.artworks] : acc;
+      }, []);
+      applyFiltersAndPagination(featuredResults, currentPage);
+    }
+  }, [filters, hasSearched, allResults, featuredArtworks, currentPage]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Explore Artworks</h1>
         <p className="text-xl text-gray-600">
@@ -340,10 +374,8 @@ const handleSearch = async (term) => {
         </p>
       </div>
 
-      {/* Search Form */}
       <SearchForm onSearch={handleSearch} isLoading={isLoading} />
 
-      {/* Error Message */}
       {error && (
         <div className="mb-8 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
           <div className="flex">
@@ -359,7 +391,6 @@ const handleSearch = async (term) => {
         </div>
       )}
 
-      {/* Content */}
       {!isLoading && (
         <>
           <div className="mb-6 flex justify-between items-center">
@@ -380,15 +411,20 @@ const handleSearch = async (term) => {
             </button>
           </div>
 
-          {showFilters && <SearchFilters filters={filters} setFilters={setFilters} />}
+          {showFilters && (
+            <SearchFilters 
+              filters={filters} 
+              setFilters={setFilters}
+            />
+          )}
 
           {hasSearched ? (
             <ArtworkList 
-              artworks={filteredResults} 
+              artworks={displayedResults}
               onAddToExhibition={addToExhibition}
-              onRemoveFromExhibition={removeFromExhibition} 
+              onRemoveFromExhibition={removeFromExhibition}
               isInExhibition={isInExhibition}
-              onExhibitionAction={handleExhibitionAction}       
+              onExhibitionAction={handleExhibitionAction}
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
@@ -398,37 +434,41 @@ const handleSearch = async (term) => {
           ) : (
             <div className="space-y-12">
               {FEATURED_CATEGORIES.map(category => {
-                const categoryArtworks = filteredResults.filter(
-                  artwork => artwork.source === category.source
-                );
+                if (filters.source !== 'all' && category.source !== filters.source) {
+                  return null;
+                }
+                const categoryData = featuredArtworks[category.id];
+                
+                if (!categoryData?.artworks?.length) {
+                  return null;
+                }
 
-                return categoryArtworks.length > 0 ? (
-                  <div key={category.id}>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">{category.title}</h2>
+                return (
+                  <div key={category.id} className="space-y-6">
+                    <h2 className="text-2xl font-bold text-gray-900">{category.title}</h2>
                     <ArtworkList 
-                      artworks={categoryArtworks}
+                      artworks={categoryData.artworks}
                       onAddToExhibition={addToExhibition}
                       onRemoveFromExhibition={removeFromExhibition}
                       isInExhibition={isInExhibition}
-                      onExhibitionAction={handleExhibitionAction}                  
+                      onExhibitionAction={handleExhibitionAction}
                     />
                   </div>
-                ) : null;
+                );
               })}
             </div>
           )}
         </>
       )}
+  
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default Search;
-
+  export default Search;

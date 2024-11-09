@@ -300,11 +300,11 @@ const ArtworkViewer = () => {
           <header>
             <h1 
               id="artwork-title"
-              className="text-3xl font-bold text-gray-900 mb-2"
+              className="text-3xl font-bold text-white mb-2"
             >
               {artwork.title}
             </h1>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-400">
               By {artwork.artist}
             </p>
           </header>
