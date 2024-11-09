@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Search as SearchIcon } from 'lucide-react';
 
-const SearchForm = ({ onSearch, isLoading }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+const SearchForm = ({ onSearch, isLoading, initialSearchTerm = '' }) => {
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
 
   const handleSubmit = (e) => {
     e.preventDefault();

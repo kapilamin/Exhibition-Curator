@@ -49,6 +49,7 @@ const getYearFromDate = (dateStr) => {
 
 const Search = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [shouldRestoreSearch, setShouldRestoreSearch] = useState(true);
   const [allResults, setAllResults] = useState([]);
   const [displayedResults, setDisplayedResults] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,6 +84,78 @@ const Search = () => {
   const [nextIndex, setNextIndex] = useState(0);
   const [allMetIds, setAllMetIds] = useState([]);
 
+  useEffect(() => {
+    const restoreLastSearch = async () => {
+      const lastSearchTerm = sessionStorage.getItem('lastSearchTerm');
+      if (lastSearchTerm && shouldRestoreSearch) {
+        setShouldRestoreSearch(false);
+        await handleSearch(lastSearchTerm);
+      }
+    };
+    restoreLastSearch();
+  }, [shouldRestoreSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+
+  useEffect(() => {
+    const fetchFeaturedArtworks = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const categoriesMap = {};
+        
+        await Promise.all(FEATURED_CATEGORIES.map(async (category) => {
+          const artworks = category.source === 'met'
+            ? await getArtworksByDepartment(category.departmentId, category.limit)
+            : await getArtworksByClassification(category.classification, category.limit);
+
+          if (artworks.length > 0) {
+            categoriesMap[category.id] = {
+              ...category,
+              artworks: artworks
+                .filter(artwork => artwork?.primaryImageSmall || artwork?.primaryimageurl)
+                .map(artwork => ({
+                  id: (artwork.objectID || artwork.id)?.toString() || '',
+                  title: artwork.title || 'Untitled',
+                  artist: artwork.artistDisplayName || artwork.people?.[0]?.name || 'Unknown Artist',
+                  image: artwork.primaryImageSmall || artwork.primaryimageurl || '',
+                  source: category.source,
+                  date: artwork.objectDate || artwork.dated || '',
+                  medium: artwork.medium || artwork.technique || artwork.classification || '',
+                  dimensions: artwork.dimensions || '',
+                  link: category.source === 'met' 
+                    ? artwork.objectURL 
+                    : `https://harvardartmuseums.org/collections/object/${artwork.id}`,
+                  hasImage: true,
+                  hasDetails: Boolean(artwork.medium || artwork.technique) && Boolean(artwork.dimensions)
+                }))
+            };
+          }
+        }));
+
+        setFeaturedArtworks(categoriesMap);
+      } catch (error) {
+        console.error('Error fetching featured artworks:', error);
+        setError('Failed to load featured artworks');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFeaturedArtworks();
+  }, []);
+
+  useEffect(() => {
+    if (hasSearched) {
+      applyFiltersAndPagination(allResults, currentPage);
+    } else if (Object.keys(featuredArtworks).length > 0) {
+      const featuredResults = Object.values(featuredArtworks).reduce((acc, category) => {
+        return category?.artworks ? [...acc, ...category.artworks] : acc;
+      }, []);
+      applyFiltersAndPagination(featuredResults, currentPage);
+    }
+  }, [filters, hasSearched, allResults, featuredArtworks, currentPage]);
+
 
   const calculateRelevanceScore = (artwork) => {
     if (!searchTerm) return 0;
@@ -94,7 +167,7 @@ const Search = () => {
       searchTerms.forEach(term => {
         if (titleLower.includes(term)) {
           score += 10;
-          if (titleLower === term) score += 5; // Exact match bonus
+          if (titleLower === term) score += 5; 
         }
       });
     }
@@ -131,6 +204,12 @@ const Search = () => {
   const handleSearch = async (term) => {
     let isMounted = true;
     setSearchTerm(term);
+
+    if (term.trim()) {
+      sessionStorage.setItem('lastSearchTerm', term);
+    } else {
+      sessionStorage.removeItem('lastSearchTerm');
+    }
     
     if (!term.trim()) {
       setHasSearched(false);
@@ -341,65 +420,6 @@ const Search = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    const fetchFeaturedArtworks = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const categoriesMap = {};
-        
-        await Promise.all(FEATURED_CATEGORIES.map(async (category) => {
-          const artworks = category.source === 'met'
-            ? await getArtworksByDepartment(category.departmentId, category.limit)
-            : await getArtworksByClassification(category.classification, category.limit);
-
-          if (artworks.length > 0) {
-            categoriesMap[category.id] = {
-              ...category,
-              artworks: artworks
-                .filter(artwork => artwork?.primaryImageSmall || artwork?.primaryimageurl)
-                .map(artwork => ({
-                  id: (artwork.objectID || artwork.id)?.toString() || '',
-                  title: artwork.title || 'Untitled',
-                  artist: artwork.artistDisplayName || artwork.people?.[0]?.name || 'Unknown Artist',
-                  image: artwork.primaryImageSmall || artwork.primaryimageurl || '',
-                  source: category.source,
-                  date: artwork.objectDate || artwork.dated || '',
-                  medium: artwork.medium || artwork.technique || artwork.classification || '',
-                  dimensions: artwork.dimensions || '',
-                  link: category.source === 'met' 
-                    ? artwork.objectURL 
-                    : `https://harvardartmuseums.org/collections/object/${artwork.id}`,
-                  hasImage: true,
-                  hasDetails: Boolean(artwork.medium || artwork.technique) && Boolean(artwork.dimensions)
-                }))
-            };
-          }
-        }));
-
-        setFeaturedArtworks(categoriesMap);
-      } catch (error) {
-        console.error('Error fetching featured artworks:', error);
-        setError('Failed to load featured artworks');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFeaturedArtworks();
-  }, []);
-
-  useEffect(() => {
-    if (hasSearched) {
-      applyFiltersAndPagination(allResults, currentPage);
-    } else if (Object.keys(featuredArtworks).length > 0) {
-      const featuredResults = Object.values(featuredArtworks).reduce((acc, category) => {
-        return category?.artworks ? [...acc, ...category.artworks] : acc;
-      }, []);
-      applyFiltersAndPagination(featuredResults, currentPage);
-    }
-  }, [filters, hasSearched, allResults, featuredArtworks, currentPage]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -410,7 +430,11 @@ const Search = () => {
         </p>
       </div>
 
-      <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+      <SearchForm 
+        onSearch={handleSearch} 
+        isLoading={isLoading}
+        initialSearchTerm={sessionStorage.getItem('lastSearchTerm') || ''} 
+      />
 
       {error && (
         <div className="mb-8 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
