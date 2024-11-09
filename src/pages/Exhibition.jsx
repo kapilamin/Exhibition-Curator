@@ -26,11 +26,10 @@ const Exhibition = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-6 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-6">
-          {/* Changed to space-y for mobile and grid for larger screens */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-16 sm:gap-6">
+          {/* Changed spacing to match ArtworkList component */}
           {exhibition.map(artwork => (
             <div key={artwork.id} className="exhibition-artwork-container">
-              {/* Added wrapper div for better mobile spacing */}
               <ArtworkCard
                 artwork={artwork}
                 onRemove={() => handleRemove(artwork)}
