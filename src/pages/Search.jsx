@@ -86,14 +86,25 @@ const Search = () => {
 
   useEffect(() => {
     const restoreLastSearch = async () => {
+      if (!shouldRestoreSearch) return;
+      
       const lastSearchTerm = sessionStorage.getItem('lastSearchTerm');
-      if (lastSearchTerm && shouldRestoreSearch) {
-        setShouldRestoreSearch(false);
-        await handleSearch(lastSearchTerm);
+      if (!lastSearchTerm) return;
+  
+      const lastPage = sessionStorage.getItem('lastPage');
+      
+      setSearchTerm(lastSearchTerm);
+      if (lastPage) {
+        setCurrentPage(parseInt(lastPage));
       }
+      setShouldRestoreSearch(false);
+      setHasSearched(true);
+  
+      await handleSearch(lastSearchTerm, parseInt(lastPage) || 1);
     };
+  
     restoreLastSearch();
-  }, [shouldRestoreSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
 
   useEffect(() => {
@@ -201,15 +212,8 @@ const Search = () => {
   };
   
 
-  const handleSearch = async (term) => {
+  const handleSearch = async (term, initialPage = 1) => {
     let isMounted = true;
-    setSearchTerm(term);
-
-    if (term.trim()) {
-      sessionStorage.setItem('lastSearchTerm', term);
-    } else {
-      sessionStorage.removeItem('lastSearchTerm');
-    }
     
     if (!term.trim()) {
       setHasSearched(false);
@@ -221,16 +225,18 @@ const Search = () => {
       setHasMore(false);
       setNextIndex(0);
       setAllMetIds([]);
+      sessionStorage.removeItem('lastSearchTerm');
+      sessionStorage.removeItem('lastPage');
       return;
     }
   
+    sessionStorage.setItem('lastSearchTerm', term);
+    setSearchTerm(term);
+    setHasSearched(true);
     setIsLoading(true);
     setError(null);
-    setHasSearched(true);
-    setCurrentPage(1);
   
     try {
-      
       const [metResults, harvardResults] = await Promise.all([
         searchMetArtworks(term),
         searchHarvardArtworks(term)
@@ -240,12 +246,14 @@ const Search = () => {
       const harvardArtworks = harvardResults?.items || [];  
       const combinedResults = [...metArtworks, ...harvardArtworks];
   
-      setHasMore(metResults.hasMore);
-      setNextIndex(metResults.nextIndex);
-      setAllMetIds(metResults.allIds);
-      setAllResults(combinedResults);
-      applyFiltersAndPagination(combinedResults, 1);
-
+      if (isMounted) {
+        setHasMore(metResults.hasMore);
+        setNextIndex(metResults.nextIndex);
+        setAllMetIds(metResults.allIds);
+        setAllResults(combinedResults);
+        applyFiltersAndPagination(combinedResults, initialPage);
+      }
+  
     } catch (error) {
       console.error('Search failed:', error);
       setError('An error occurred while searching. Please try again.');
@@ -253,7 +261,7 @@ const Search = () => {
       setDisplayedResults([]);
     } finally {
       if (isMounted) {
-      setIsLoading(false);
+        setIsLoading(false);
       }
     }
   };
@@ -416,6 +424,7 @@ const Search = () => {
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
+    sessionStorage.setItem('lastPage', newPage.toString());
     applyFiltersAndPagination(allResults, newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
