@@ -62,6 +62,63 @@
   .exhibition-item {
     @apply flex items-center gap-4 p-4 bg-white rounded-lg shadow-md;
   }
+
+  .artwork-card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden;
+    @apply flex flex-col h-full;
+  }
+
+  .artwork-image-container {
+    @apply relative w-full;
+    @apply aspect-[4/3];
+  }
+
+  .artwork-image {
+    @apply w-full h-full object-contain bg-gray-100 dark:bg-gray-900;
+  }
+
+  .artwork-details {
+    @apply p-4 flex flex-col flex-grow;
+    @apply space-y-2;
+  }
+
+  .artwork-title {
+    @apply text-lg font-medium text-blue-600 dark:text-blue-400;
+    @apply line-clamp-2 hover:text-blue-700 dark:hover:text-blue-300;
+  }
+
+  .artwork-artist {
+    @apply text-gray-600 dark:text-gray-300;
+  }
+
+  .artwork-date {
+    @apply text-sm text-gray-500 dark:text-gray-400;
+  }
+
+  .artwork-actions {
+    @apply flex justify-between items-center mt-4;
+    @apply space-x-4;
+  }
+
+  .artwork-remove {
+    @apply text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300;
+    @apply font-medium;
+  }
+
+  .artwork-view {
+    @apply text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300;
+    @apply font-medium flex items-center gap-2;
+  }
+
+  /* Exhibition specific styles */
+  .exhibition-artwork {
+    @apply mb-6 last:mb-0;  /* Adds margin between exhibition items, removes it from last item */
+  }
+
+  .exhibition-container {
+    @apply space-y-6 px-4 sm:px-6;  /* Consistent padding across screen sizes */
+  }
+
 }
 
 @media (prefers-color-scheme: dark) {
