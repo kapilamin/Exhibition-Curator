@@ -110,13 +110,12 @@
     @apply font-medium flex items-center gap-2;
   }
 
-  /* Exhibition specific styles */
   .exhibition-artwork {
-    @apply mb-6 last:mb-0;  /* Adds margin between exhibition items, removes it from last item */
+    @apply mb-6 last:mb-0;  
   }
 
   .exhibition-container {
-    @apply space-y-6 px-4 sm:px-6;  /* Consistent padding across screen sizes */
+    @apply space-y-6 px-4 sm:px-6; 
   }
 
 }

@@ -89,7 +89,6 @@ const Search = () => {
     const searchTerms = searchTerm.toLowerCase().split(' ');
     let score = 0;
   
-    // Title match (highest weight)
     if (artwork.title) {
       const titleLower = artwork.title.toLowerCase();
       searchTerms.forEach(term => {
@@ -100,7 +99,6 @@ const Search = () => {
       });
     }
   
-    // Artist match
     if (artwork.artist) {
       const artistLower = artwork.artist.toLowerCase();
       searchTerms.forEach(term => {
@@ -108,7 +106,6 @@ const Search = () => {
       });
     }
   
-    // Medium match
     if (artwork.medium) {
       const mediumLower = artwork.medium.toLowerCase();
       searchTerms.forEach(term => {
@@ -116,7 +113,6 @@ const Search = () => {
       });
     }
   
-    // Date match
     if (artwork.date) {
       const dateLower = artwork.date.toLowerCase();
       searchTerms.forEach(term => {
@@ -124,10 +120,8 @@ const Search = () => {
       });
     }
   
-    // Add a small boost for having an image
     if (artwork.hasImage) score += 2;
   
-    // Add a small boost for having details
     if (artwork.hasDetails) score += 1;
   
     return score;
@@ -184,7 +178,6 @@ const Search = () => {
       }
     }
   };
-
 
   const handleLoadMore = async () => {
     if (!hasMore || isLoadingMore) return;
@@ -479,35 +472,84 @@ const Search = () => {
             </>
           ) : (
             <div className="space-y-12">
-              {FEATURED_CATEGORIES.map(category => {
-                if (filters.source !== 'all' && category.source !== filters.source) {
-                  return null;
+            {FEATURED_CATEGORIES.map(category => {
+              if (filters.source !== 'all' && category.source !== filters.source) {
+                return null;
+              }
+              const categoryData = featuredArtworks[category.id];
+              
+              if (!categoryData?.artworks?.length) {
+                return null;
+              }
+        
+              let filteredArtworks = [...categoryData.artworks];
+        
+              if (filters.medium !== 'all') {
+                const keywords = MEDIUM_KEYWORDS[filters.medium.toLowerCase()] || [];
+                filteredArtworks = filteredArtworks.filter(artwork => {
+                  const mediumText = (artwork.medium || '').toLowerCase();
+                  return keywords.some(keyword => mediumText.includes(keyword));
+                });
+              }
+        
+              if (filters.period !== 'all') {
+                filteredArtworks = filteredArtworks.filter(artwork => {
+                  const year = getYearFromDate(artwork.date);
+                  if (year) {
+                    switch (filters.period) {
+                      case 'ancient': return year < 500;
+                      case 'medieval': return year >= 500 && year < 1400;
+                      case 'renaissance': return year >= 1400 && year < 1600;
+                      case 'modern': return year >= 1600 && year < 1900;
+                      case 'contemporary': return year >= 1900;
+                      default: return true;
+                    }
+                  }
+                  return false;
+                });
+              }
+        
+              filteredArtworks.sort((a, b) => {
+                switch (filters.sortBy) {
+                  case 'relevance':
+                    return calculateRelevanceScore(b) - calculateRelevanceScore(a);
+                  case 'title':
+                    return (a.title || '').localeCompare(b.title || '');
+                  case 'artist':
+                    return (a.artist || 'Unknown').localeCompare(b.artist || 'Unknown');
+                  case 'dateAsc':
+                  case 'dateDesc': {
+                    const yearA = getYearFromDate(a.date) || 0;
+                    const yearB = getYearFromDate(b.date) || 0;
+                    return filters.sortBy === 'dateAsc' ? yearA - yearB : yearB - yearA;
+                  }
+                  default:
+                    return 0;
                 }
-                const categoryData = featuredArtworks[category.id];
-                
-                if (!categoryData?.artworks?.length) {
-                  return null;
-                }
-
-                return (
-                  <div key={category.id} className="space-y-6">
-                    <h2 className="text-2xl font-bold text-gray-900">{category.title}</h2>
-                    <ArtworkList 
-                      artworks={categoryData.artworks}
-                      onAddToExhibition={addToExhibition}
-                      onRemoveFromExhibition={removeFromExhibition}
-                      isInExhibition={isInExhibition}
-                      onExhibitionAction={handleExhibitionAction}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+              });
+        
+              if (!filteredArtworks.length) {
+                return null;
+              }
+        
+              return (
+                <div key={category.id} className="space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-900">{category.title}</h2>
+                  <ArtworkList 
+                    artworks={filteredArtworks}
+                    onAddToExhibition={addToExhibition}
+                    onRemoveFromExhibition={removeFromExhibition}
+                    isInExhibition={isInExhibition}
+                    onExhibitionAction={handleExhibitionAction}
+                  />
+                </div>
+              );
+            })}
+          </div>
           )}
         </>
       )}
   
-        {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>

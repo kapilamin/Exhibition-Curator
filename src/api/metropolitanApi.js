@@ -40,10 +40,8 @@ export const searchArtworks = async (query) => {
       };
     }
 
-    // Get initial batch of IDs
     const initialIds = allObjectIds.slice(0, PAGE_SIZE);
     
-    // Fetch initial batch
     const results = await Promise.all(
       initialIds.map(id => fetchWithRetry(id))
     );
@@ -84,7 +82,6 @@ export const searchArtworks = async (query) => {
   }
 };
 
-// Add this new function to load more results
 export const loadMoreArtworks = async (allIds, startIndex) => {
   try {
     const batchIds = allIds.slice(startIndex, startIndex + PAGE_SIZE);
