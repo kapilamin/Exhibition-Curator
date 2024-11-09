@@ -5,7 +5,6 @@ const API_KEY = process.env.REACT_APP_HARVARD_API_KEY;
 
 export const searchArtworks = async (query, page = 1, limit = 100) => {
   try {
-    console.log('Starting Harvard search for:', query);
     
     const response = await axios.get(`${API_BASE_URL}/object`, {
       params: {
@@ -18,7 +17,6 @@ export const searchArtworks = async (query, page = 1, limit = 100) => {
     });
 
     const records = response.data?.records || [];
-    console.log('Harvard total records:', records.length);
 
     const formattedRecords = records.map(record => ({
       id: record.id?.toString(),
@@ -32,12 +30,6 @@ export const searchArtworks = async (query, page = 1, limit = 100) => {
       link: `https://harvardartmuseums.org/collections/object/${record.id}`,
       hasImage: Boolean(record.primaryimageurl)
     }));
-
-    console.log('Harvard processed results:', {
-      total: formattedRecords.length,
-      withImages: formattedRecords.filter(r => r.hasImage).length,
-      sample: formattedRecords[0]
-    });
 
     return {
       items: formattedRecords,
@@ -86,7 +78,6 @@ export const getClassifications = async () => {
 
 export const getArtworksByClassification = async (classification, limit = 8) => {
   try {
-    console.log(`Fetching Harvard artworks for classification: ${classification}`);
     
     const response = await axios.get(`${API_BASE_URL}/object`, {
       params: {
@@ -100,7 +91,6 @@ export const getArtworksByClassification = async (classification, limit = 8) => 
     });
 
     const records = response.data?.records || [];
-    console.log(`Found ${records.length} Harvard records`);
 
     return records
       .filter(record => record.primaryimageurl)

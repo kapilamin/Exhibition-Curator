@@ -98,34 +98,21 @@ const Search = () => {
     setCurrentPage(1);
   
     try {
-      console.log('Starting search for:', term);
-      
       const [metResults, harvardResults] = await Promise.all([
-        searchMetArtworks(term),
+        searchMetArtworks(term, currentPage, itemsPerPage),
         searchHarvardArtworks(term)
       ]);
   
-      console.log('Raw API Results:', { met: metResults, harvard: harvardResults });
-  
       const metArtworks = metResults?.items || [];
-      console.log('Met artworks:', {
-        count: metArtworks.length,
-        sample: metArtworks[0]
-      });
-  
       const harvardArtworks = harvardResults?.items || [];
-      console.log('Harvard artworks:', {
-        count: harvardArtworks.length,
-        sample: harvardArtworks[0]
-      });
   
       const combinedResults = [...metArtworks, ...harvardArtworks];
-      console.log('Combined results:', {
-        total: combinedResults.length,
-        met: metArtworks.length,
-        harvard: harvardArtworks.length
-      });
   
+      const totalMetItems = metResults.total || 0;
+      const totalHarvardItems = harvardResults.total || 0;
+      
+      setTotalItems(totalMetItems + totalHarvardItems);
+      setTotalPages(Math.ceil((totalMetItems + totalHarvardItems) / itemsPerPage));
       setAllResults(combinedResults);
       applyFiltersAndPagination(combinedResults, 1);
   
@@ -141,43 +128,22 @@ const Search = () => {
     }
   };
 
+
   const applyFiltersAndPagination = (results, page) => {
-    console.log('Starting filter application with:', {
-      resultsCount: results.length,
-      filters: filters,
-      sampleArtwork: results[0]
-    });
-  
+
     let filtered = [...results];
-    let filterLog = {};
   
     if (filters.source !== 'all') {
       const beforeCount = filtered.length;
       filtered = filtered.filter(artwork => artwork.source === filters.source);
-      filterLog.source = {
-        before: beforeCount,
-        after: filtered.length,
-        removed: beforeCount - filtered.length
-      };
     }
   
     if (filters.hasImage) {
       const beforeCount = filtered.length;
       filtered = filtered.filter(artwork => {
         const hasValidImage = Boolean(artwork.image);
-        console.log('Image filter check:', {
-          id: artwork.id,
-          hasImage: artwork.hasImage,
-          actualImage: artwork.image,
-          hasValidImage
-        });
         return hasValidImage;
       });
-      filterLog.image = {
-        before: beforeCount,
-        after: filtered.length,
-        removed: beforeCount - filtered.length
-      };
     }
   
     if (filters.hasDetails) {
@@ -187,19 +153,8 @@ const Search = () => {
           (artwork.medium && artwork.medium.trim()) || 
           (artwork.classification && artwork.classification.trim())
         ) && Boolean(artwork.dimensions && artwork.dimensions.trim());
-        console.log('Details check:', {
-          id: artwork.id,
-          medium: artwork.medium,
-          dimensions: artwork.dimensions,
-          hasValidDetails
-        });
         return hasValidDetails;
       });
-      filterLog.details = {
-        before: beforeCount,
-        after: filtered.length,
-        removed: beforeCount - filtered.length
-      };
     }
   
     if (filters.medium !== 'all') {
@@ -208,19 +163,8 @@ const Search = () => {
       filtered = filtered.filter(artwork => {
         const mediumText = (artwork.medium || '').toLowerCase();
         const matches = keywords.some(keyword => mediumText.includes(keyword));
-        console.log('Medium check:', {
-          id: artwork.id,
-          medium: mediumText,
-          keywords,
-          matches
-        });
         return matches;
       });
-      filterLog.medium = {
-        before: beforeCount,
-        after: filtered.length,
-        removed: beforeCount - filtered.length
-      };
     }
   
     if (filters.period !== 'all') {
@@ -240,23 +184,10 @@ const Search = () => {
           }
         }
         
-        console.log('Period check:', {
-          id: artwork.id,
-          date: artwork.date,
-          year,
-          matches
-        });
         return matches;
       });
-      filterLog.period = {
-        before: beforeCount,
-        after: filtered.length,
-        removed: beforeCount - filtered.length
-      };
     }
-  
-    console.log('Filter application log:', filterLog);
-  
+    
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'title':
@@ -282,13 +213,6 @@ const Search = () => {
     setTotalItems(total);
     setTotalPages(totalPagesCount);
     setDisplayedResults(filtered.slice(startIndex, endIndex));
-  
-    console.log('Final results:', {
-      totalResults: total,
-      currentPage: page,
-      resultsOnPage: filtered.slice(startIndex, endIndex).length,
-      sampleResult: filtered[0]
-    });
   };
   
 
@@ -419,18 +343,20 @@ const Search = () => {
           )}
 
           {hasSearched ? (
-            <ArtworkList 
-              artworks={displayedResults}
-              onAddToExhibition={addToExhibition}
-              onRemoveFromExhibition={removeFromExhibition}
-              isInExhibition={isInExhibition}
-              onExhibitionAction={handleExhibitionAction}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              totalItems={totalItems}
-              itemsPerPage={itemsPerPage}
-            />
+            <>
+              <ArtworkList 
+                artworks={displayedResults}
+                onAddToExhibition={addToExhibition}
+                onRemoveFromExhibition={removeFromExhibition}
+                isInExhibition={isInExhibition}
+                onExhibitionAction={handleExhibitionAction}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+              />
+            </>
           ) : (
             <div className="space-y-12">
               {FEATURED_CATEGORIES.map(category => {
@@ -460,15 +386,15 @@ const Search = () => {
           )}
         </>
       )}
-  
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
-          </div>
-        )}
-      </div>
-    );
-  };
 
-  export default Search;
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Search;
