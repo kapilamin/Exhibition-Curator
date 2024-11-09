@@ -10,7 +10,7 @@ const SearchFilters = ({ filters, setFilters }) => {
 
   const defaultFilters = {
     source: 'all',
-    sortBy: 'title',
+    sortBy: 'relevance',
     period: 'all',
     medium: 'all',
     hasImage: true,
@@ -48,6 +48,7 @@ const SearchFilters = ({ filters, setFilters }) => {
             onChange={(e) => handleFilterChange('sortBy', e.target.value)}
             className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
           >
+            <option value="relevance">Relevance</option>
             <option value="title">Title (A-Z)</option>
             <option value="artist">Artist Name</option>
             <option value="dateAsc">Date (Oldest First)</option>

@@ -64,7 +64,7 @@ const Search = () => {
 
   const [filters, setFilters] = useState({
     source: 'all',
-    sortBy: 'title',
+    sortBy: 'relevance',
     period: 'all',
     medium: 'all',
     hasImage: true,
@@ -83,6 +83,56 @@ const Search = () => {
   const [nextIndex, setNextIndex] = useState(0);
   const [allMetIds, setAllMetIds] = useState([]);
 
+
+  const calculateRelevanceScore = (artwork) => {
+    if (!searchTerm) return 0;
+    const searchTerms = searchTerm.toLowerCase().split(' ');
+    let score = 0;
+  
+    // Title match (highest weight)
+    if (artwork.title) {
+      const titleLower = artwork.title.toLowerCase();
+      searchTerms.forEach(term => {
+        if (titleLower.includes(term)) {
+          score += 10;
+          if (titleLower === term) score += 5; // Exact match bonus
+        }
+      });
+    }
+  
+    // Artist match
+    if (artwork.artist) {
+      const artistLower = artwork.artist.toLowerCase();
+      searchTerms.forEach(term => {
+        if (artistLower.includes(term)) score += 8;
+      });
+    }
+  
+    // Medium match
+    if (artwork.medium) {
+      const mediumLower = artwork.medium.toLowerCase();
+      searchTerms.forEach(term => {
+        if (mediumLower.includes(term)) score += 6;
+      });
+    }
+  
+    // Date match
+    if (artwork.date) {
+      const dateLower = artwork.date.toLowerCase();
+      searchTerms.forEach(term => {
+        if (dateLower.includes(term)) score += 4;
+      });
+    }
+  
+    // Add a small boost for having an image
+    if (artwork.hasImage) score += 2;
+  
+    // Add a small boost for having details
+    if (artwork.hasDetails) score += 1;
+  
+    return score;
+  };
+  
 
   const handleSearch = async (term) => {
     let isMounted = true;
@@ -257,6 +307,8 @@ const Search = () => {
     
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
+        case 'relevance':
+      return calculateRelevanceScore(b) - calculateRelevanceScore(a);
         case 'title':
           return (a.title || '').localeCompare(b.title || '');
         case 'artist':
