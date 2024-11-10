@@ -177,9 +177,9 @@ const ArtworkViewer = () => {
         role="alert"
       >
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/search')}
           className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-8 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-lg p-2"
-          aria-label="Return to previous page"
+          aria-label="Return to search page"
         >
           <ChevronLeft size={20} aria-hidden="true" />
           <span>Go Back</span>
@@ -214,9 +214,9 @@ const ArtworkViewer = () => {
 
       <nav className="flex justify-between items-center mb-8">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/search')}
           className="flex items-center gap-2 text-purple-600 hover:text-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-lg p-2"
-          aria-label="Return to previous page"
+          aria-label="Return to search page"
         >
           <ChevronLeft size={20} aria-hidden="true" />
           <span>Back to {location.state?.from || 'Search'}</span>
