@@ -118,43 +118,43 @@ const ArtworkList = ({
     }
   };
 
-  const renderExhibitionButton = (artwork) => {
-    const inExhibition = isInExhibition(artwork.id);
+  // const renderExhibitionButton = (artwork) => {
+  //   const inExhibition = isInExhibition(artwork.id);
     
-    if (inExhibition) {
-      return (
-        <button
-          onClick={() => {
-            onRemoveFromExhibition(artwork.id);
-            if (onExhibitionAction) {
-              onExhibitionAction(artwork, 'removed');
-            }
-          }}
-          className="flex items-center gap-1 text-red-600 hover:text-red-700"
-          aria-label="Remove from exhibition"
-        >
-          <Minus size={16} />
-          <span className="text-sm font-medium">Remove</span>
-        </button>
-      );
-    }
+  //   if (inExhibition) {
+  //     return (
+  //       <button
+  //         onClick={() => {
+  //           onRemoveFromExhibition(artwork.id);
+  //           if (onExhibitionAction) {
+  //             onExhibitionAction(artwork, 'removed');
+  //           }
+  //         }}
+  //         className="flex items-center gap-1 text-red-600 hover:text-red-700"
+  //         aria-label="Remove from exhibition"
+  //       >
+  //         <Minus size={16} />
+  //         <span className="text-sm font-medium">Remove</span>
+  //       </button>
+  //     );
+  //   }
   
-    return (
-      <button
-        onClick={() => {
-          onAddToExhibition(artwork);
-          if (onExhibitionAction) {
-            onExhibitionAction(artwork, 'added');
-          }
-        }}
-        className="flex items-center gap-1 text-green-600 hover:text-green-700"
-        aria-label="Add to exhibition"
-      >
-        <Plus size={16} />
-        <span className="text-sm font-medium">Add</span>
-      </button>
-    );
-  };
+  //   return (
+  //     <button
+  //       onClick={() => {
+  //         onAddToExhibition(artwork);
+  //         if (onExhibitionAction) {
+  //           onExhibitionAction(artwork, 'added');
+  //         }
+  //       }}
+  //       className="flex items-center gap-1 text-green-600 hover:text-green-700"
+  //       aria-label="Add to exhibition"
+  //     >
+  //       <Plus size={16} />
+  //       <span className="text-sm font-medium">Add</span>
+  //     </button>
+  //   );
+  // };
 
   // Pagination logic
   const pages = [];
