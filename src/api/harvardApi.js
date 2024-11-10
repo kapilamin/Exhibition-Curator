@@ -2,16 +2,33 @@ import axios from 'axios';
 
 const API_BASE_URL = 'https://api.harvardartmuseums.org';
 const API_KEY = process.env.REACT_APP_HARVARD_API_KEY;
+const PAGE_SIZE = 40;
 
-export const searchArtworks = async (query, page = 1, limit = 100) => {
+export const searchArtworks = async (query, page = 1) => {
   try {
+    const countResponse = await axios.get(`${API_BASE_URL}/object`, {
+      params: {
+        apikey: API_KEY,
+        q: query,          
+        hasimage: 1,
+        size: 1,
+        fields: 'id'
+      }
+    });
+
+    const total = countResponse.data?.info?.totalrecords || 0;
     
+    if (total === 0) {
+      return { items: [], total: 0, page, totalPages: 0 };
+    }
+
     const response = await axios.get(`${API_BASE_URL}/object`, {
       params: {
         apikey: API_KEY,
         q: query,          
         hasimage: 1,       
-        size: 100,
+        size: PAGE_SIZE,
+        page: page,
         fields: 'id,title,primaryimageurl,people,dated,division,classification,technique,medium,dimensions'
       }
     });
@@ -33,16 +50,49 @@ export const searchArtworks = async (query, page = 1, limit = 100) => {
 
     return {
       items: formattedRecords,
-      total: formattedRecords.length,
+      total,
       page,
-      totalPages: Math.ceil(formattedRecords.length / limit)
+      totalPages: Math.ceil(total / PAGE_SIZE),
+      hasMore: page * PAGE_SIZE < total,
+      nextIndex: page + 1
     };
 
   } catch (error) {
     console.error('Harvard API Error:', error);
-    return { items: [], total: 0, page, totalPages: 0 };
+    return { items: [], total: 0, page, totalPages: 0, hasMore: false };
   }
 };
+
+export const loadMoreArtworks = async (query, page) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/object`, {
+      params: {
+        apikey: API_KEY,
+        q: query,          
+        hasimage: 1,       
+        size: PAGE_SIZE,
+        page: page,
+        fields: 'id,title,primaryimageurl,people,dated,division,classification,technique,medium,dimensions'
+      }
+    });
+
+    const records = response.data?.records || [];
+    const total = response.data?.info?.totalrecords || 0;
+
+    const formattedRecords = records.map(record => ({
+    }));
+
+    return {
+      items: formattedRecords,
+      hasMore: page * PAGE_SIZE < total,
+      nextIndex: page + 1
+    };
+  } catch (error) {
+    console.error('Error loading more Harvard artworks:', error);
+    return { items: [], hasMore: false, nextIndex: page };
+  }
+};
+
 
 export const getArtworkDetails = async (objectId) => {
   try {

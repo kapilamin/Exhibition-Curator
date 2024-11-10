@@ -7,10 +7,11 @@ import ArtworkList from '../components/ArtworkList';
 import { 
   searchArtworks as searchMetArtworks, 
   getArtworksByDepartment,
-  loadMoreArtworks
+  loadMoreArtworks as loadMoreMetArtworks
 } from '../api/metropolitanApi';
 import { 
-  searchArtworks as searchHarvardArtworks, 
+  searchArtworks as searchHarvardArtworks,
+  loadMoreArtworks as loadMoreHarvardArtworks, 
   getArtworksByClassification 
 } from '../api/harvardApi';
 import { Filter } from 'lucide-react';
@@ -58,6 +59,23 @@ const Search = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [featuredArtworks, setFeaturedArtworks] = useState({});
 
+  const [metPagination, setMetPagination] = useState({
+    hasMore: false,
+    nextIndex: 0,
+    allIds: []
+  });
+
+  const [harvardPagination, setHarvardPagination] = useState({
+    hasMore: false,
+    nextPage: 1,
+    query: ''
+  });
+
+  const [isLoadingMore, setIsLoadingMore] = useState({
+    met: false,
+    harvard: false
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -78,11 +96,6 @@ const Search = () => {
   const isInExhibition = (artworkId) => {
     return exhibition.some(item => item.id === artworkId);
   };
-
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [nextIndex, setNextIndex] = useState(0);
-  const [allMetIds, setAllMetIds] = useState([]);
 
   useEffect(() => {
     const restoreLastSearch = async () => {
@@ -157,6 +170,19 @@ const Search = () => {
   }, []);
 
   useEffect(() => {
+    setCurrentPage(1);
+    
+    if (hasSearched) {
+      applyFiltersAndPagination(allResults, 1);
+    } else if (Object.keys(featuredArtworks).length > 0) {
+      const featuredResults = Object.values(featuredArtworks).reduce((acc, category) => {
+        return category?.artworks ? [...acc, ...category.artworks] : acc;
+      }, []);
+      applyFiltersAndPagination(featuredResults, 1);
+    }
+  }, [filters]); 
+  
+  useEffect(() => {
     if (hasSearched) {
       applyFiltersAndPagination(allResults, currentPage);
     } else if (Object.keys(featuredArtworks).length > 0) {
@@ -165,7 +191,8 @@ const Search = () => {
       }, []);
       applyFiltersAndPagination(featuredResults, currentPage);
     }
-  }, [filters, hasSearched, allResults, featuredArtworks, currentPage]);
+  }, [currentPage, allResults, featuredArtworks, hasSearched]);
+    
 
 
   const calculateRelevanceScore = (artwork) => {
@@ -222,9 +249,8 @@ const Search = () => {
       setTotalItems(0);
       setTotalPages(0);
       setCurrentPage(1);
-      setHasMore(false);
-      setNextIndex(0);
-      setAllMetIds([]);
+      setMetPagination({ hasMore: false, nextIndex: 0, allIds: [] });
+      setHarvardPagination({ hasMore: false, nextPage: 1, query: '' });
       sessionStorage.removeItem('lastSearchTerm');
       sessionStorage.removeItem('lastPage');
       return;
@@ -247,9 +273,18 @@ const Search = () => {
       const combinedResults = [...metArtworks, ...harvardArtworks];
   
       if (isMounted) {
-        setHasMore(metResults.hasMore);
-        setNextIndex(metResults.nextIndex);
-        setAllMetIds(metResults.allIds);
+        setMetPagination({
+          hasMore: metResults.hasMore,
+          nextIndex: metResults.nextIndex,
+          allIds: metResults.allIds
+        });
+
+        setHarvardPagination({
+          hasMore: harvardResults.hasMore,
+          nextPage: harvardResults.nextIndex,
+          query: term
+        });
+
         setAllResults(combinedResults);
         applyFiltersAndPagination(combinedResults, initialPage);
       }
@@ -267,38 +302,93 @@ const Search = () => {
   };
 
   const handleLoadMore = async () => {
-    if (!hasMore || isLoadingMore) return;
-
-    setIsLoadingMore(true);
+    const canLoadMoreMet = metPagination.hasMore && !isLoadingMore.met;
+    const canLoadMoreHarvard = harvardPagination.hasMore && !isLoadingMore.harvard;
+  
+    if (filters.source !== 'all') {
+      if (filters.source === 'met' && !canLoadMoreMet) return;
+      if (filters.source === 'harvard' && !canLoadMoreHarvard) return;
+    }
+  
+    setIsLoadingMore({
+      met: canLoadMoreMet && (filters.source === 'all' || filters.source === 'met'),
+      harvard: canLoadMoreHarvard && (filters.source === 'all' || filters.source === 'harvard')
+    });
+  
     try {
-      const moreResults = await loadMoreArtworks(allMetIds, nextIndex);
-      
-      if (moreResults.items.length) {
-        const newResults = [...allResults, ...moreResults.items];
-        setAllResults(newResults);
-        setHasMore(moreResults.hasMore);
-        setNextIndex(moreResults.nextIndex);
-        applyFiltersAndPagination(newResults, currentPage);
+      const loadMorePromises = [];
+  
+      if (canLoadMoreMet && (filters.source === 'all' || filters.source === 'met')) {
+        loadMorePromises.push(
+          loadMoreMetArtworks(metPagination.allIds, metPagination.nextIndex)
+        );
       }
+  
+      if (canLoadMoreHarvard && (filters.source === 'all' || filters.source === 'harvard')) {
+        loadMorePromises.push(
+          loadMoreHarvardArtworks(harvardPagination.query, harvardPagination.nextPage)
+        );
+      }
+  
+      const results = await Promise.all(loadMorePromises);
+  
+      let newMetResults = [];
+      let newHarvardResults = [];
+      let metIndex = 0;
+      let harvardIndex = 0;
+  
+      if (canLoadMoreMet && (filters.source === 'all' || filters.source === 'met')) {
+        const metResult = results[metIndex];
+        newMetResults = metResult.items;
+        setMetPagination(prev => ({
+          ...prev,
+          hasMore: metResult.hasMore,
+          nextIndex: metResult.nextIndex
+        }));
+        metIndex++;
+      }
+  
+      if (canLoadMoreHarvard && (filters.source === 'all' || filters.source === 'harvard')) {
+        const harvardResult = results[harvardIndex];
+        newHarvardResults = harvardResult.items;
+        setHarvardPagination(prev => ({
+          ...prev,
+          hasMore: harvardResult.hasMore,
+          nextPage: harvardResult.nextIndex
+        }));
+      }
+  
+      const combinedResults = [...allResults, ...newMetResults, ...newHarvardResults];
+      setAllResults(combinedResults);
+      
+      applyFiltersAndPagination(combinedResults, currentPage);
+  
     } catch (error) {
       console.error('Failed to load more results:', error);
       setError('Failed to load more results. Please try again.');
     } finally {
-      setIsLoadingMore(false);
+      setIsLoadingMore({
+        met: false,
+        harvard: false
+      });
     }
   };
 
   const LoadMoreButton = () => {
-    if (!hasMore || !hasSearched) return null;
+    const hasMoreResults = metPagination.hasMore || harvardPagination.hasMore;
+    
+    if (!hasMoreResults || !hasSearched) return null;
+
+    const isCurrentlyLoading = isLoadingMore.met || isLoadingMore.harvard;
 
     return (
       <div className="mt-8 text-center">
         <button
           onClick={handleLoadMore}
-          disabled={isLoadingMore}
+          disabled={isCurrentlyLoading}
           className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
         >
-          {isLoadingMore ? (
+          {isCurrentlyLoading ? (
             <span className="flex items-center justify-center gap-2">
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               Loading more...
@@ -406,11 +496,13 @@ const Search = () => {
   
     const total = filtered.length;
     const totalPagesCount = Math.ceil(total / itemsPerPage);
+    const validPage = Math.min(Math.max(1, page), Math.max(1, totalPagesCount));
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     
     setTotalItems(total);
     setTotalPages(totalPagesCount);
+    setCurrentPage(validPage);
     setDisplayedResults(filtered.slice(startIndex, endIndex));
   
   };
