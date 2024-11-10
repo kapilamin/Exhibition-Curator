@@ -283,7 +283,7 @@ const ArtworkViewer = () => {
               className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-500"
               aria-label="View previous artwork"
             >
-              <ChevronLeft size={24} aria-hidden="true" />
+              <ChevronLeft size={24} color="black" aria-hidden="true" />
             </button>
             <button
               onClick={handleNext}
@@ -291,7 +291,7 @@ const ArtworkViewer = () => {
               className="p-2 rounded-full bg-white shadow-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-purple-500"
               aria-label="View next artwork"
             >
-              <ChevronRight size={24} aria-hidden="true" />
+              <ChevronRight size={24} color="black" aria-hidden="true" />
             </button>
           </div>
         </div>

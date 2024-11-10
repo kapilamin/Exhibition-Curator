@@ -124,7 +124,7 @@ const Search = () => {
             categoriesMap[category.id] = {
               ...category,
               artworks: artworks
-                .filter(artwork => artwork?.primaryImageSmall || artwork?.primaryimageurl)
+              .filter(artwork => artwork?.primaryImageSmall || artwork?.primaryimageurl)
                 .map(artwork => ({
                   id: (artwork.objectID || artwork.id)?.toString() || '',
                   title: artwork.title || 'Untitled',

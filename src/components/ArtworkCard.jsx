@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Minus, ExternalLink } from 'lucide-react';
+import { Plus, Minus } from 'lucide-react';
 
 const ArtworkCard = ({ artwork, onAddToExhibition, onRemove }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
@@ -77,14 +77,6 @@ const ArtworkCard = ({ artwork, onAddToExhibition, onRemove }) => {
               <span className="text-sm font-medium">Remove</span>
             </button>
           )}
-          
-          <Link
-            to={`/artwork/${artwork.source}/${artwork.id}`}
-            className="flex items-center gap-1 text-purple-600 hover:text-purple-700 transition-colors ml-auto"
-          >
-            <span className="text-sm font-medium">View Details</span>
-            <ExternalLink size={16} />
-          </Link>
         </div>
 
         <div className="mt-3 pt-3 border-t border-gray-100">

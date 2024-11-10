@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Minus, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ArtworkCard = ({ artwork, index, artworkList, onAddToExhibition, isInExhibition, onExhibitionAction, onRemoveFromExhibition }) => {
     const [isImageLoading, setIsImageLoading] = useState(true);
@@ -65,7 +65,7 @@ const ArtworkCard = ({ artwork, index, artworkList, onAddToExhibition, isInExhib
                 aria-label="Remove from exhibition"
               >
                 <Minus size={16} />
-                <span className="text-sm font-medium">Remove</span>
+                <span className="text-sm font-medium">Remove from exhibition</span>
               </button>
             ) : (
               <button
@@ -77,18 +77,9 @@ const ArtworkCard = ({ artwork, index, artworkList, onAddToExhibition, isInExhib
                 aria-label="Add to exhibition"
               >
                 <Plus size={16} />
-                <span className="text-sm font-medium">Add</span>
+                <span className="text-sm font-medium">Add to exhibition</span>
               </button>
             )}
-            
-            <Link
-              to={`/artwork/${artwork.source}/${artwork.id}`}
-              state={{ artworkList, currentIndex: index }}
-              className="flex items-center gap-1 text-purple-600 hover:text-purple-700"
-            >
-              <span className="text-sm font-medium">View Details</span>
-              <ExternalLink size={16} />
-            </Link>
           </div>
         </div>
       </div>
@@ -181,7 +172,7 @@ const ArtworkList = ({
 
   return (
     <div className="space-y-12 md:space-y-8" >
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16 md:gap-6">
+       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {artworks.map((artwork, index) => (
             <ArtworkCard
             key={artwork.id}
