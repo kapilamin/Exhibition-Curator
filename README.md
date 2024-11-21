@@ -4,7 +4,7 @@ A web application that allows users to create virtual art exhibitions by curatin
 
 ## Live Demo
 
-Visit the live application at: [Exhibition Curator](https://app.netlify.com/sites/ka-exhibition-curator/)
+Visit the live application at: [Exhibition Curator](https://ka-exhibition-curator.netlify.app/)
 
 ## Features
 
